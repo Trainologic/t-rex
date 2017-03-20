@@ -1,0 +1,18 @@
+<div class="app-menu">
+    <span class="logo">Angular 2</span>
+    <span class="space"></span>
+    <div class="login-details" *ngIf="isLoggedIn()">
+        <span>Hello, {{auth.user.name}}</span>
+    </div>
+    <my-clock></my-clock>
+</div>
+
+<div>
+    <button (click)="login()">Login</button>
+    <button (click)="logout()">Logout</button>
+</div>
+
+<my-new-contact></my-new-contact>
+
+<my-contact-list [contacts]="contacts?.displayed"></my-contact-list>
+

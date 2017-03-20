@@ -1,0 +1,24 @@
+{
+  "name": "txsvc-samples-angular1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node build/start.js",
+    "tsc": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "angular": "^1.6.2",
+    "build-utils": "^1.0.25",
+    "txsvc": "^1.0.19"
+  },
+  "devDependencies": {
+    "@types/core-js": "^0.9.35",
+    "@types/node": "^7.0.5",
+    "build-utils": "^1.0.19",
+    "systemjs-server": "^1.1.68",
+    "typescript": "^2.2.0"
+  }
+}

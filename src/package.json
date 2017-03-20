@@ -1,0 +1,25 @@
+{
+  "name": "t-rex",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "bu test",
+    "patch": "bu patch",
+    "pack": "bu pack",
+    "tsc": "tsc"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+    }
+  ],
+  "devDependencies": {
+    "@types/jasmine": "^2.5.42",
+    "@types/node": "^7.0.4",
+    "build-utils": "^1.0.28",
+    "jasmine": "^2.5.3",
+    "jasmine-expect": "^3.6.0",
+    "object.values": "^1.0.4",
+    "typescript": "^2.2.1",
+    "zone.js": "^0.8.4"
+  }
+}
