@@ -37,14 +37,14 @@ class CounterStore {
         return this.store.getState();
     }
     
-    @Transaction()
+    @Activity()
     inc() {
         this.store.update({
             counter: this.state.counter + 1,
         });
     }
     
-    @Transaction()
+    @Activity()
     dec() {
         this.store.update({
             counter: this.state.counter - 1,
@@ -123,7 +123,7 @@ class CountersStore {
         return this.store.getState();
     }
     
-    @Transaction()
+    @Activity()
     incActivity() {
         this.store.update({
             activityCount: this.state.activityCount + 1,
@@ -137,7 +137,7 @@ class AuthStore {
         roles: null,
     });
     
-    @Transaction()
+    @Activity()
     login() {
         this.store.update({
             userName: "ori",
@@ -145,7 +145,7 @@ class AuthStore {
         });
     }
     
-    @Transaction()
+    @Activity()
     logout() {
         this.store.update({
             userName: null,
@@ -161,7 +161,7 @@ class RootStore {
     constructor(private countersStore: CountersStore, private authStore: AuthStore){
     }
     
-    @Transaction()
+    @Activity()
     loginAndIncActivityCount() {
         this.authStore.login();
         this.countersStore.incActivity();
@@ -185,7 +185,7 @@ Only if both **inc()** and **login()** complete successfully then the backing ap
 T-rex support asynchronous operations. Continuing with above example we can return a promise from an action and the transaction decorator will monitor the completeness of the action and only then will update the backing appStore
 
 ```sh
-@Transaction(): Promise<void>
+@Activity(): Promise<void>
 loginAndIncActivityCount() {
     return Promise.resolve()
         .then(()=>this.couterStore.inc())
@@ -196,7 +196,7 @@ loginAndIncActivityCount() {
 Or, in case you are using async/await syntax
 
 ```sh
-@Transaction(): Promise<void>
+@Activity(): Promise<void>
 async loginAndIncActivityCount() {
     await this.couterStore.inc();
     await this.authStore.login();
