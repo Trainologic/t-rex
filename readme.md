@@ -25,10 +25,10 @@ interface AppState {
     counter: number
 }
 ```
-Then, define the store which manages a single aspect of the application state. In our case this is the **counter** field
+Then, define a service which manages a single aspect of the application state. In our case this is the **counter** field
 
 ```sh
-class CounterStore {
+class CounterService {
     store = ServiceStore.create<AppState>("/", {
         counter: 0,
     });
@@ -53,30 +53,30 @@ class CounterStore {
 }
 ```
 
-Then, create the backing appStore instance and register each store into it
+Then, create the backing appStore instance and register each service into it
 
 ```sh
-const counterStore = new CounterStore();
+const counterService = new CounterService();
 
 const appStore = new AppStore<AppState>();
 appStore.init([
-    counterStore.store
+    counterService
 ]);
 ```
 
-Inside your component you deal with a specific store instance (like, CounterStore) and forget about the backing appStore instance.
+Inside your component you deal with a specific service instance (like, CounterService) and forget about the backing appStore instance.
 
 ```sh
 class ToolbarComponent {
-    constructor(private counterStore: CounterStore){
+    constructor(private counterService: CounterService){
     }
     
     onIncButtonClicked() {
-        this.counterStore.inc();
+        this.counterService.inc();
     }
     
     onDecButtonClicked() {
-        this.counterStore.dec();
+        this.counterService.dec();
     }
 }
 ```
@@ -85,8 +85,8 @@ Other components can listen to the change event
 
 ```sh
 class CounterComponent {
-    constuctor(counterStore: CounterStore) {
-        counterStore.subscribe(counter => {
+    constuctor(counterService: CounterService) {
+        counterService.subscribe(counter => {
             //
             //  Do something with the new counter
             //
@@ -95,7 +95,7 @@ class CounterComponent {
 }
 ```
 
-The power of T-rex resides inside the ability to compose actions from different stores
+The power of T-rex resides inside the ability to compose methods from different services but still keep a single transaction
 
 For example, we want to maintain a counter which counts the number of end user activities. Every time the user logs-in or logs-out we want to increment the activity counter
 
@@ -114,7 +114,7 @@ interface CountersState {
     activityCount: number;
 }
 
-class CountersStore {
+class CountersService {
     store = ServiceStore.create<AppState>("counters", {
         activityCount: 0,
     });
@@ -131,7 +131,7 @@ class CountersStore {
     }
 }
 
-class AuthStore {
+class AuthService {
     store = ServiceStore.create<AuthState>("auth", {
         userName: null,
         roles: null,
@@ -154,35 +154,35 @@ class AuthStore {
     }
 }
 
-class RootStore {
+class RootService {
     store = ServiceStore.create<AppState>("/", {
     });
     
-    constructor(private countersStore: CountersStore, private authStore: AuthStore){
+    constructor(private countersService: CountersService, private authService: AuthService){
     }
     
     @Activity()
     loginAndIncActivityCount() {
-        this.authStore.login();
-        this.countersStore.incActivity();
+        this.authService.login();
+        this.countersService.incActivity();
     }
 }
 
-const countersStore = new CountersStore();
-const authStore = new AuthStore();
-const rootStore = new RootStore();
+const countersService = new CountersService();
+const authService = new AuthService();
+const rootService = new RootService();
 
 const appStore = new AppStore<AppState>();
 appStore.init([
-    rootStore.store
-    counterStore.store
-    counterStore.store
+    rootService
+    countersService
+    rootService
 ]);
 ```
 
 Only if both **inc()** and **login()** complete successfully then the backing appStore is updated and all subscribers are notified
 
-T-rex support asynchronous operations. Continuing with above example we can return a promise from an action and the transaction decorator will monitor the completeness of the action and only then will update the backing appStore
+T-rex support asynchronous operations. Continuing with above example we can return a promise from an action and the transaction decorator monitors the completeness of the action and only then updates the backing appStore
 
 ```sh
 @Activity(): Promise<void>
