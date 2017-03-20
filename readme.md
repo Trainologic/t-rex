@@ -1,19 +1,19 @@
-# TxSvc
+# T-rex
 
-A transactional state container for SPA applications
+A simplified application state state container based on the component/service paradigm
 
 ### Who am I
 
-TxSvc is a transactional state container for SPA applications like Angular & React.
+T-rex is a transactional state container for SPA applications like Angular & React.
 It relies on Typescript syntax for intercepting component calls and ZoneJS mechanism for
 tracking asynchronous activities.
-While using TxSvc inside Angular/React applications is simple you can also use TxSvc
+While using T-rex inside Angular/React applications is simple you can also use T-rex
 in any JavaScript application
 
 ### Installation
 
 ```sh
-$ npm install txsvc
+$ npm install t-rex
 ```
 
 ### Getting Started
@@ -95,7 +95,7 @@ class CounterComponent {
 }
 ```
 
-The power of TxSvc resides inside the ability to compose actions from different stores
+The power of T-rex resides inside the ability to compose actions from different stores
 
 For example, we want to maintain a counter which counts the number of end user activities. Every time the user logs-in or logs-out we want to increment the activity counter
 
@@ -182,7 +182,7 @@ appStore.init([
 
 Only if both **inc()** and **login()** complete successfully then the backing appStore is updated and all subscribers are notified
 
-TxSvc support asynchronous operations. Continuing with above example we can return a promise from an action and the transaction decorator will monitor the completeness of the action and only then will update the backing appStore
+T-rex support asynchronous operations. Continuing with above example we can return a promise from an action and the transaction decorator will monitor the completeness of the action and only then will update the backing appStore
 
 ```sh
 @Transaction(): Promise<void>
