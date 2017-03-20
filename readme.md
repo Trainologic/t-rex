@@ -1,6 +1,6 @@
 # T-rex
 
-A simplified application state state container based on the component/service paradigm
+A simplified application state container based on the component/service paradigm
 
 ### Who am I
 
