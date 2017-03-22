@@ -1,5 +1,5 @@
 import {appModule} from "../app.module";
-import {ContactsStore, Contact, ContactsState} from "../stores/contacts.store";
+import {Contact} from "../services/contacts.service";
 
 export class ContactListComponent {
     contacts: Contact[];

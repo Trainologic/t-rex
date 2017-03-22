@@ -1,15 +1,15 @@
 import {appModule} from "../app.module";
-import {ContactsStore, Contact, ContactsState} from "../stores/contacts.store";
-import {createLogger} from "txsvc/logger";
+import {ContactService, Contact, ContactsState} from "../services/contacts.service";
+import {createLogger} from "t-rex/logger";
 
 export class AppComponent {
     contacts: Contact[];
 
-    constructor(private contactsStore: ContactsStore) {
+    constructor(private contactService: ContactService) {
     }
 
     $onInit() {
-        this.contactsStore.store.subscribe((newState: ContactsState)=> {
+        this.contactService.store.subscribe((newState: ContactsState)=> {
             this.contacts = newState.all;
 
             //debugger;
@@ -21,7 +21,7 @@ export class AppComponent {
     }
 
     onDeleteContact($event) {
-        this.contactsStore.deleteById($event.contact.id);
+        this.contactService.deleteById($event.contact.id);
     }
 }
 

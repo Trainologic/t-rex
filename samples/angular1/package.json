@@ -11,13 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "angular": "^1.6.2",
-    "build-utils": "^1.0.25",
-    "txsvc": "^1.0.19"
+    "t-rex": "^1.0.1"
   },
   "devDependencies": {
     "@types/core-js": "^0.9.35",
     "@types/node": "^7.0.5",
-    "build-utils": "^1.0.19",
+    "build-utils": "^1.0.25",
+    "nopack": "^1.1.8",
     "systemjs-server": "^1.1.68",
     "typescript": "^2.2.0"
   }

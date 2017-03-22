@@ -1,10 +1,10 @@
 import {appModule} from "../app.module";
-import {ContactsStore, Contact, ContactsState} from "../stores/contacts.store";
+import {ContactService, Contact, ContactsState} from "../services/contacts.service";
 
 export class AddContactComponent {
     name: string;
 
-    constructor(private contactsStore: ContactsStore) {
+    constructor(private contactService: ContactService) {
     }
 
     add() {
@@ -12,7 +12,7 @@ export class AddContactComponent {
             return;
         }
 
-        this.contactsStore.add({id:-1, name: this.name});
+        this.contactService.add({id:-1, name: this.name});
     }
 }
 

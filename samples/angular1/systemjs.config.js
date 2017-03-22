@@ -5,6 +5,9 @@ SystemJS.config({
     meta: {
         "angular": {
             format: "global"
+        },
+        "*.html": {
+            loader: "text",
         }
     }
 });

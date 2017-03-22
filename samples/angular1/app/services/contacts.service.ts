@@ -1,6 +1,6 @@
-import {ServiceStore} from "txsvc/ServiceStore";
+import {ServiceStore} from "t-rex/ServiceStore";
 import {appModule} from "../app.module";
-import {Activity, Service} from "txsvc/decorators";
+import {Activity, Service} from "t-rex/decorators";
 
 export interface Contact {
     id: number;
@@ -11,7 +11,7 @@ export interface ContactsState {
     all: Contact[];
 }
 
-export class ContactsStore {
+export class ContactService {
     public store = ServiceStore.create<ContactsState>("contacts", {
         all: [
             {id:1, name: "Ori"},
@@ -46,4 +46,4 @@ export class ContactsStore {
     }
 }
 
-appModule.service("contactsStore", ContactsStore);
+appModule.service("contactService", ContactService);
