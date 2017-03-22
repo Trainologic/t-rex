@@ -1,5 +1,5 @@
 declare namespace jasmine {
-    interface Matchers {
+    interface Matchers<T> {
         toBeEqualArray(expected);
         toDeeplyEqual(expected);
     }

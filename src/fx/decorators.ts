@@ -127,20 +127,3 @@ export function Activity(options?: ActivityOptions) {
         return descriptor;
     }
 }
-
-export function Activity(options?: ActivityOptions) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        const method = descriptor.value;
-
-        descriptor.value = function (...args) {
-            const service = this;
-            let appStore = getAppStoreFromService(service);
-
-            return TransactionScope.runInsideTransaction(appStore, function () {
-                return method.apply(service, args);
-            });
-        }
-
-        return descriptor;
-    }
-}
