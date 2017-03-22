@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Contact, ContactVM} from "../services/contacts.service";
-import {createLogger} from "txsvc/logger";
+import {createLogger} from "t-rex/logger";
 
 const logger = createLogger("ContactListComponent");
 

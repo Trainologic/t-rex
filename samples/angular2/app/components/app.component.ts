@@ -17,7 +17,7 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    this.appActivities.store.subscribe(state => {
+    this.appActivities.appStore.subscribe(state => {
       this.contacts = state.contacts;
       this.auth = state.auth;
     });

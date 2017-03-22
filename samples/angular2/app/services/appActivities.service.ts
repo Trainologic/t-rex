@@ -1,9 +1,9 @@
-import {ServiceStore} from "txsvc/ServiceStore";
-import {AppStore} from "txsvc/AppStore";
+import {ServiceStore} from "t-rex/ServiceStore";
+import {AppStore} from "t-rex/AppStore";
 import {ContactsService, ContactsState} from "./contacts.service";
 import {Injectable} from "@angular/core";
 import {AuthService, AuthState} from "./auth.service";
-import {Activity, transaction} from "txsvc/decorators";
+import {Activity, transaction} from "t-rex/decorators";
 
 export interface AppState {
     contacts: ContactsState;
@@ -12,14 +12,14 @@ export interface AppState {
 
 @Injectable()
 export class AppActivities {
-    constructor(public store: AppStore<AppState>,
+    constructor(public appStore: AppStore<AppState>,
                 public authStore: AuthService,
                 public contactsStore: ContactsService) {
     }
 
     //@Transaction()
     logout() {
-        transaction(this.store, ()=> {
+        transaction(this.appStore, ()=> {
             this.authStore.logout();
             this.contactsStore.clear();
         });

@@ -1,6 +1,6 @@
-import {Activity} from "txsvc/decorators";
+import {Activity} from "t-rex/decorators";
 import {Injectable} from "@angular/core";
-import {ServiceStore} from "txsvc/ServiceStore";
+import {ServiceStore} from "t-rex/ServiceStore";
 
 export interface Contact {
     id: number;
