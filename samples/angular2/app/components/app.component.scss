@@ -1,7 +1,12 @@
 @import "../styles/component";
 
 :host {
-  @include component;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: 1em;
 }
 
 .app-menu {
