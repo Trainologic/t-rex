@@ -82,12 +82,12 @@ export interface ServiceOptions {
 
 export function Service(options: ServiceOptions) {
     return function(target: any) {
-        console.log(target);
+        logger.log(target);
 
         Reflect.set(target, ACTIVITY_SERVICE, {});
 
         const res = Reflect.get(target, ACTIVITY_SERVICE);
-        console.log("RES", res);
+        logger.log("RES", res);
         return target;
     }
 }

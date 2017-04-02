@@ -39,31 +39,34 @@ export class TransactionScope {
     }
 
     public getNewState() {
-        return this.tranState.getNewState();
+        return this.tranState.getCurrent();
     }
 
     public getOldState() {
-        return this.tranState.getState();
+        return this.tranState.getBase();
     }
 
     public commit() {
         this.ensureNotCommitted();
 
-        const oldState = this.tranState.getState();
-        const newState = this.tranState.getNewState();
+        let oldState = this.tranState.getBase();
+        let newState = this.tranState.getCurrent();
+        const currentState = this.appStore.getState();
 
-        if(newState == this.appStore.getState()) {
+        if(newState == currentState) {
             this.logger.log("Nothing new to commit. updateCount is", this.updateCount);
             return;
         }
 
-        if(oldState != this.appStore.getState()) {
+        if(oldState != currentState) {
             //
             //  A parallel transaction has already modified the main store before us
             //  We only allow parallel changes at different branches. Else, "Concurrency error is raised"
             //
-            this.logger.log("Rebasing");
-            this.tranState.rebase(this.appStore.getState());
+            this.tranState.rebase(currentState);
+
+            oldState = this.tranState.getBase();
+            newState = this.tranState.getCurrent();
         }
 
         this.committed = true;

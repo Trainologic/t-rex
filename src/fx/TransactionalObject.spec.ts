@@ -39,7 +39,7 @@ describe("TransactionalObject", function() {
         tx.setProperty(TransactionalObject.ROOT, {id:2});
         tx.commit();
 
-        expect(tx.getState()).toDeeplyEqual({id:2, name: "Ori"});
+        expect(tx.getBase()).toDeeplyEqual({id:2, name: "Ori"});
     });
 
     it(`Reuses the newState object when running multiple updates`, function() {
@@ -49,17 +49,17 @@ describe("TransactionalObject", function() {
         });
 
         tx.setProperty(TransactionalObject.ROOT, {id:2});
-        const obj1 = tx.getNewState();
+        const obj1 = tx.getCurrent();
 
         tx.setProperty(TransactionalObject.ROOT, {id:3});
-        const obj2 = tx.getNewState();
+        const obj2 = tx.getCurrent();
 
         expect(obj1).toEqual(obj2);
     });
 
     describe("deep update", function() {
         let state;
-        let tx;
+        let tx: TransactionalObject<any>;
 
         beforeEach(function() {
             state = {
@@ -81,7 +81,7 @@ describe("TransactionalObject", function() {
             tx.setProperty("nested.nested.nested", {name:"Ori"});
             tx.commit();
 
-            expect(tx.getState()).toDeeplyEqual({
+            expect(tx.getCurrent()).toDeeplyEqual({
                 id:1,
                 nested: {
                     id: 2,
@@ -100,7 +100,7 @@ describe("TransactionalObject", function() {
             tx.setProperty("nested.nested.nested", {name:"Ori"});
             tx.commit();
 
-            const newState = tx.getState();
+            const newState = tx.getCurrent();
             expect(state == newState).toBeFalsy();
             expect(state.nested == newState.nested).toBeFalsy();
             expect(state.nested.nested == newState.nested.nested).toBeFalsy();

@@ -18,6 +18,8 @@ export class TransactionalObject<StateT> {
     }
 
     commit() {
+        logger.log("commit");
+
         for(var obj of this.modified) {
             delete obj[$$MODIFIED];
         }
@@ -27,8 +29,10 @@ export class TransactionalObject<StateT> {
     }
 
     rebase(newBase) {
-        const res = this.internalRebase(this.current, this.base, newBase, "/");
-        this.current = res;
+        logger.log("rebase");
+
+        this.current = this.internalRebase(this.current, this.base, newBase, "/");
+        this.base = newBase;
     }
 
     private appendPath(path, field) {
@@ -70,7 +74,7 @@ export class TransactionalObject<StateT> {
                 //
                 if(base[field] != newBase[field]) {
                     const fieldPath = this.appendPath(path, field);
-                    console.error("Concurrency error at path \"" + fieldPath + "\".", "base is", base[field], "while latest is", newBase[field]);
+                    logger.error("Concurrency error at path \"" + fieldPath + "\".", "base is", base[field], "while latest is", newBase[field]);
                     throw new Error("Concurrency error at " + fieldPath);
                 }
             }
@@ -99,11 +103,11 @@ export class TransactionalObject<StateT> {
         return newCurrent;
     }
 
-    getState() {
+    getBase() {
         return this.base;
     }
 
-    getNewState() {
+    getCurrent() {
         return this.current;
     }
 

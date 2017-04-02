@@ -13,7 +13,7 @@ export interface StoreListener<StateT> {
 // export abstract class AppStore<StateT extends object> {
 //     abstract init(stores: ServiceStore<any>[]);
 //
-//     abstract getState(): StateT;
+//     abstract getBase(): StateT;
 //
 //     abstract subscribe(listener: (newState, oldState) => void);
 //

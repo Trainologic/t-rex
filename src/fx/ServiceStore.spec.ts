@@ -219,7 +219,7 @@ describe("ServiceStore", function() {
         done();
     });
 
-    xit("raises concurrency error when an array is modified by two parallel activities", async function (done) {
+    it("raises concurrency error when an array is modified by two parallel activities", async function (done) {
         interface AppState {
             nums: number[];
         }
@@ -241,15 +241,13 @@ describe("ServiceStore", function() {
                 return this.store.getState();
             }
 
-            @Activity({beginTransaction: false})
+            @Activity()
             async run() {
-                await delay(10000);
+                await delay(0);
 
-                transaction(this.store, ()=> {
-                    this.store.update({
-                        nums: this.state.nums.concat([1])
-                    })
-                });
+                await this.store.update({
+                    nums: this.state.nums.concat([1])
+                })
             }
         }
 
@@ -258,11 +256,6 @@ describe("ServiceStore", function() {
         appStore.init([
             service1
         ]);
-
-        let fired = false;
-        authStore.store.subscribeTo("userName", (newState, oldState)=> {
-            fired = true;
-        });
 
         let thrown = false;
         try {
@@ -275,10 +268,91 @@ describe("ServiceStore", function() {
             thrown = true;
         }
 
-        expect(appStore.getState().nums.length).toEqual(2);
+        expect(thrown).toEqual(true);
 
-        //expect(fired).toBe(false);
-        //expect(thrown).toEqual(true);
+        done();
+    });
+
+    it("does not raise error when paralell transactions update different branches", async function (done) {
+        interface Branch1State {
+            counter: number;
+        }
+
+        interface Branch2State {
+            counter: number;
+        }
+
+        interface AppState {
+            branch1: Branch1State;
+            branch2: Branch2State;
+        }
+
+        function delay(ms) {
+            return new Promise((resolve, reject)=> {
+                setTimeout(function() {
+                    resolve();
+                }, ms);
+            });
+        }
+
+        class Service1 {
+            store = ServiceStore.create<Branch1State>("branch1", {
+                counter: 0,
+            });
+
+            get state() {
+                return this.store.getState();
+            }
+
+            @Activity()
+            async inc() {
+                await delay(0);
+
+                await this.store.update({
+                    counter: this.state.counter + 1
+                })
+            }
+        }
+
+        class Service2 {
+            store = ServiceStore.create<Branch2State>("branch2", {
+                counter: 0,
+            });
+
+            get state() {
+                return this.store.getState();
+            }
+
+            @Activity()
+            async inc() {
+                await delay(0);
+
+                await this.store.update({
+                    counter: this.state.counter + 1
+                })
+            }
+        }
+
+        const appStore = new AppStore<AppState>();
+        const service1 = new Service1();
+        const service2 = new Service2();
+        appStore.init([
+            service1,
+            service2,
+        ]);
+
+        let thrown = false;
+        try {
+            await Promise.all([
+                service1.inc(),
+                service2.inc()
+            ]);
+        }
+        catch(err) {
+            thrown = true;
+        }
+
+        expect(thrown).toEqual(false);
 
         done();
     });
