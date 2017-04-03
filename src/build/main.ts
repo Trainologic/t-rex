@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as cli from "build-utils/cli";
-import {copyGlob, copyFile, deleteDirectory, createDirectory} from "build-utils/fs";
+import {copyFile, deleteDirectory, createDirectory, copyGlob} from "build-utils/fs";
+import {mergeConfig} from "build-utils/config";
 import {exec} from "build-utils/process";
 
 cli.command("patch", patch);
@@ -26,13 +27,14 @@ async function jasmine() {
 export async function pack() {
     console.log("Creating npm package");
 
+    await mergeConfig("./tsconfig.json", "./build/tsconfig.pack.json", "./tsconfig.pack.json");
+
     await deleteDirectory("./build_tmp");
     await deleteDirectory("./package");
-    await exec(path.resolve("node_modules/.bin/tsc") + " -p ./build/tsconfig.pack.json");
+    await exec(path.resolve("node_modules/.bin/tsc") + " -p ./tsconfig.pack.json");
     await createDirectory("./package");
-    await copyGlob("./build_tmp/*.js", "./package");
-    await copyGlob("./build_tmp/*.d.ts", "./package");
-    await copyGlob("./build_tmp/*.metadata.json", "./package");
+    await copyGlob("./build_tmp/fx/*.js", "./package");
+    await copyGlob("./build_tmp/fx/*.d.ts", "./package");
     await copyFile("./package.json", "package/package.json");
 }
 

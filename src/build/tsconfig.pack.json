@@ -1,18 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "inlineSources": true,
+    "sourceMap": false,
     "inlineSourceMap": true,
-    "removeComments": false,
-    "noImplicitAny": false,
     "declaration": true,
-    "outDir": "../build_tmp",
-    "lib": ["es2015"]
-  },
-  "files": [
-    "../fx/index.ts",
-    "../fx/globals.d.ts"
-  ]
+    "outDir": "./build_tmp"
+  }
 }

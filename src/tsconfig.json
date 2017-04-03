@@ -7,12 +7,12 @@
     "removeComments": false,
     "noImplicitAny": false,
     "experimentalDecorators": true,
-    "lib": ["es2015"]
+    "lib": ["es2015", "dom"]
   },
   "files": [
     "fx/index.ts",
-    "fx/globals.d.ts",
     "build/main.ts",
-    "spec/index.ts"
+    "spec/index.ts",
+    "globals.d.ts"
   ]
 }

@@ -1,6 +1,7 @@
 {
   "name": "t-rex",
-  "version": "1.0.1",
+  "version": "1.0.6",
+  "main": "index.js",
   "scripts": {
     "test": "bu test",
     "patch": "bu patch",
@@ -21,5 +22,8 @@
     "object.values": "^1.0.4",
     "typescript": "^2.2.1",
     "zone.js": "^0.8.4"
+  },
+  "dependencies": {
+    "angular": "^1.6.4"
   }
 }

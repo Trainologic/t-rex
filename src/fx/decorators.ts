@@ -6,7 +6,7 @@ import {IService} from "./Service";
 
 const logger = createLogger("decorators");
 
-const ACTIVITY_SERVICE = "txsvc:service";
+const ACTIVITY_SERVICE = "t-rex:service";
 
 export function transaction<T extends object>(store: AppStore<T> | ServiceStore<T>, func) {
     const appStore = getAppStoreFromStore(store);

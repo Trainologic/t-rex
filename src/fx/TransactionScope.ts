@@ -3,7 +3,7 @@ import {TransactionalObject} from "./TransactionalObject";
 import {createLogger, Logger} from "./logger";
 
 if(typeof Zone === "undefined") {
-    throw new Error("txsvc cannot execute without zone.js. Please ensure zone.js is loaded before txsvc");
+    throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before txsvc");
 }
 
 export class TransactionScope {
@@ -17,14 +17,14 @@ export class TransactionScope {
 
     private static nextTranId = 0;
 
-    constructor(appStore: AppStore<any>, outerZone: Zone) {
+    constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
         this.logger = createLogger("TransactionScope(" + this.id + ")");
         this.updateCount = 0;
         this.appStore = appStore;
         this.tranState = new TransactionalObject(appStore.getState());
         this.committed = false;
-        this.outerZone = outerZone;
+        this.outerZone = Zone.current;
 
         this.logger.log("created");
     }
@@ -131,7 +131,7 @@ export class TransactionScope {
         //  This is a root transaction
         //  When completed need to commit to the appStore
         //
-        tran = new TransactionScope(appStore, Zone.current);
+        tran = new TransactionScope(appStore);
 
         const spec: ZoneSpec = {
             name: "tran",

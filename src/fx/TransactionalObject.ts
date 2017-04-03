@@ -1,7 +1,7 @@
 import {createLogger} from "./logger";
 export const ROOT = "/";
-export const $$MODIFIED = "$$txsvc:modified";
-export const $$VERSION = "$$txsvc:version";
+export const $$MODIFIED = "$$t-rex:modified";
+export const $$VERSION = "$$t-rex:version";
 
 const logger = createLogger("TransactionalObject");
 
@@ -54,7 +54,7 @@ export class TransactionalObject<StateT> {
 
         let newCurrent = current;
         for(let field in newBase) {
-            if(field.startsWith("$$txsvc")) {
+            if(field.startsWith("$$t-rex")) {
                 continue;
             }
 
