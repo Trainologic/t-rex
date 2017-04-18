@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as cli from "build-utils/cli";
 import {copyFile, deleteDirectory, createDirectory, copyGlob} from "build-utils/fs";
-import {mergeConfig} from "build-utils/config";
+import {mergeConfig, updateConfig} from "build-utils/config";
 import {exec} from "build-utils/process";
 
 cli.command("patch", patch);
@@ -31,11 +31,16 @@ export async function pack() {
 
     await deleteDirectory("./build_tmp");
     await deleteDirectory("./package");
+
     await exec(path.resolve("node_modules/.bin/tsc") + " -p ./tsconfig.pack.json");
-    await createDirectory("./package");
-    await copyGlob("./build_tmp/fx/*.js", "./package");
+
+    await exec("node_modules/.bin/rollup -c build/rollup.config.js");
+    await exec("node_modules/.bin/rollup -c build/rollup.config.js -f es -o package/t-rex.es2015.js");
+
+    //await copyGlob("./build_tmp/fx/*.js", "./package");
     await copyGlob("./build_tmp/fx/*.d.ts", "./package");
     await copyFile("./package.json", "package/package.json");
+    await updateConfig("package/package.json", {devDependencies: {}}, false);
 }
 
 export async function patch() {

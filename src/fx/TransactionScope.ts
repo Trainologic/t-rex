@@ -3,7 +3,7 @@ import {TransactionalObject} from "./TransactionalObject";
 import {createLogger, Logger} from "./logger";
 
 if(typeof Zone === "undefined") {
-    throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before txsvc");
+    throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
 }
 
 export class TransactionScope {
