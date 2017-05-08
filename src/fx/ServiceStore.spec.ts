@@ -273,7 +273,7 @@ describe("ServiceStore", function() {
         done();
     });
 
-    it("does not raise error when paralell transactions update different branches", async function (done) {
+    it("does not raise error when parallel transactions update different branches", async function (done) {
         interface Branch1State {
             counter: number;
         }
@@ -346,6 +346,64 @@ describe("ServiceStore", function() {
             await Promise.all([
                 service1.inc(),
                 service2.inc()
+            ]);
+        }
+        catch(err) {
+            thrown = true;
+        }
+
+        expect(thrown).toEqual(false);
+
+        done();
+    });
+
+    it("does not raise error when parallel transactions update different branches", async function (done) {
+        interface Branch1State {
+            obj: any;
+        }
+
+        interface AppState {
+            branch1: Branch1State;
+        }
+
+        function delay(ms) {
+            return new Promise((resolve, reject)=> {
+                setTimeout(function() {
+                    resolve();
+                }, ms);
+            });
+        }
+
+        class Service1 {
+            store = ServiceStore.create<Branch1State>("branch1", {
+                obj: null,
+            });
+
+            get state() {
+                return this.store.getState();
+            }
+
+            @Activity()
+            async load() {
+                await delay(0);
+
+                await this.store.update({
+                    obj: {}
+                })
+            }
+        }
+
+        const appStore = new AppStore<AppState>();
+        const service1 = new Service1();
+        appStore.init([
+            service1,
+        ]);
+
+        let thrown = false;
+        try {
+            await Promise.all([
+                service1.load(),
+                service1.load(),
             ]);
         }
         catch(err) {

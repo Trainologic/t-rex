@@ -14,5 +14,7 @@
       "type": "MIT"
     }
   ],
-  "devDependencies": {}
+  "devDependencies": {
+    "typescript": "^2.2.2"
+  }
 }
