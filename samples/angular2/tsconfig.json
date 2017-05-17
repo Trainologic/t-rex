@@ -1,19 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "removeComments": false,
-    "noImplicitAny": false,
-    "lib": ["ES6", "DOM"]
+    "target": "es5",                          /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'. */
+    "module": "commonjs",                     /* Specify module code generation: 'commonjs', 'amd', 'system', 'umd' or 'es2015'. */
+    "lib": ["dom", "es2015"],
+    "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
+    "experimentalDecorators": true        /* Enables experimental support for ES7 decorators. */
   },
-  "files": [
-    "app/main.ts"
-  ],
-  "exclude": [
-    "../../node_modules/*"
+  "include": [
+    "app/main.ts",
+    "build/main.ts",
+    "server/main.ts"
   ]
 }

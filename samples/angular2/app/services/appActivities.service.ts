@@ -1,9 +1,9 @@
 import {ServiceStore} from "t-rex/ServiceStore";
-import {AppStore} from "t-rex/AppStore";
+import {AppStore} from "t-rex";
 import {ContactsService, ContactsState} from "./contacts.service";
 import {Injectable} from "@angular/core";
 import {AuthService, AuthState} from "./auth.service";
-import {Activity, transaction} from "t-rex/decorators";
+import {Activity, transaction} from "t-rex";
 
 export interface AppState {
     contacts: ContactsState;

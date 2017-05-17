@@ -6,4 +6,6 @@ stores/**/*.js
 stores/**/*.js.map
 build/**/*.js
 build/**/*.js.map
+server/**/*.js
+server/**/*.js.map
 build_tmp

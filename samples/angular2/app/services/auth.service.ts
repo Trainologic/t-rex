@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
-import {Activity} from "t-rex/decorators";
-import {ServiceStore} from "t-rex/ServiceStore";
+import {Activity} from "t-rex";
+import {ServiceStore} from "t-rex";
 
 export interface UserDetails {
     id: number;

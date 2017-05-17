@@ -1,6 +1,6 @@
-import {Activity} from "t-rex/decorators";
+import {Activity} from "t-rex";
 import {Injectable} from "@angular/core";
-import {ServiceStore} from "t-rex/ServiceStore";
+import {ServiceStore} from "t-rex";
 
 export interface Contact {
     id: number;

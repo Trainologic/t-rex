@@ -1,8 +1,5 @@
 import {Component, Input} from '@angular/core';
 import {Contact, ContactVM} from "../services/contacts.service";
-import {createLogger} from "t-rex/logger";
-
-const logger = createLogger("ContactListComponent");
 
 @Component({
   selector: "my-contact-list",
@@ -14,11 +11,9 @@ export class ContactListComponent {
   @Input() contacts: ContactVM[];
 
   constructor() {
-    logger.log("ctor");
   }
 
   ngOnChanges(changes) {
-    logger.log("ngOnChanges", changes);
   }
 
   dump() {

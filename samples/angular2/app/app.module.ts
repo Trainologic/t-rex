@@ -7,7 +7,7 @@ import {ContactDetailsComponent} from "./components/contactDetails.component";
 import {AppActivities, AppState} from "./services/appActivities.service";
 import {NewContactComponent} from "./components/newContact.component";
 import {FormsModule} from "@angular/forms";
-import {AppStore} from "t-rex/AppStore";
+import {AppStore} from "t-rex";
 import {AuthService} from "./services/auth.service";
 import {ContactsService} from "./services/contacts.service";
 
