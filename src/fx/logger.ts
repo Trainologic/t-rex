@@ -1,5 +1,4 @@
-let enabled = false;
-
+import {config, configure} from "./config";
 export interface Logger {
     log(...args);
     error(...args);
@@ -12,15 +11,14 @@ const nullLogger = {
     warn: function(){},
 };
 
-// function internalEnableLogging(enable) {
-// }
-
 export const enableLogging = function(enable) {
-    enabled = enable;
+    configure({
+        enableLogging: enable
+    });
 }
 
 export function createLogger(prefix): Logger {
-    if(!enabled) {
+    if(!config.enableLogging) {
         return nullLogger;
     }
 

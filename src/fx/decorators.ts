@@ -3,6 +3,7 @@ import {ServiceStore} from "./ServiceStore";
 import {AppStore} from "./AppStore";
 import {createLogger} from "./logger";
 import {IService} from "./Service";
+import {config} from "./config";
 
 const logger = createLogger("decorators");
 
@@ -29,7 +30,6 @@ function getStoreFromService(service: IService<any>) {
 
     return getAppStoreFromStore(store);
 }
-
 
 function getAppStoreFromStore<T extends object>(store: AppStore<T> | ServiceStore<T>): AppStore<T> {
     if(store instanceof AppStore) {
@@ -113,7 +113,7 @@ export function Activity(options?: ActivityOptions) {
             const service = this;
             let appStore = getAppStoreFromService(service);
 
-            const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", true);
+            const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", config.activityAutoBeginTransaction);
             if(beginTransaction) {
                 return TransactionScope.runInsideTransaction(appStore, function () {
                     return method.apply(service, args);

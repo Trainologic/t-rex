@@ -1,5 +1,9 @@
-import {enableLogging} from "./logger";
-enableLogging(false);
+import {configure} from "./config";
+
+configure({
+    enableLogging: false,
+    //activityAutoBeginTransaction: false,
+});
 
 import {AppStore} from "./AppStore";
 import {ServiceStore} from "./ServiceStore";
