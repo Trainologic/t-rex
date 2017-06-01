@@ -10,21 +10,11 @@ export interface StoreListener<StateT> {
     (newState: StateT, oldState: StateT): void;
 }
 
-// export abstract class AppStore<StateT extends object> {
-//     abstract init(stores: ServiceStore<any>[]);
-//
-//     abstract getBase(): StateT;
-//
-//     abstract subscribe(listener: (newState, oldState) => void);
-//
-//     abstract unsubscribe(listener: (newState, oldState) => void);
-//
-//     abstract commit(oldState, newState);
-//
-//     static createStore<StateT extends object>(): AppStore<StateT> {
-//         return new AppStoreImpl<StateT>();
-//     }
-// }
+export interface StoreSubscription {
+    (): void;
+}
+
+export type ServiceOrStore = ServiceStore<any> | IService<any>;
 
 //
 //  Holds application base and allow subscribing to changes
@@ -32,7 +22,7 @@ export interface StoreListener<StateT> {
 //  Commit request is delegated from the ServiceStore to this appStore
 //
 export class AppStore<StateT extends object> {
-    private listeners: StoreListener<any>[];
+    private listeners: StoreListener<StateT>[];
     private appState: StateT;
     private stores: ServiceStore<any>[];
 
@@ -42,32 +32,46 @@ export class AppStore<StateT extends object> {
         this.stores = [];
     }
 
-    init(stores: IService<any>[]) {
+    init(servicesOrStores: ServiceOrStore[]) {
+        const stores: ServiceStore<any>[] = servicesOrStores.map(s => this.extractStore(s));
+
         for(let store of stores) {
-            if(store.store instanceof ServiceStore) {
-                this.registerStore(store.store);
-            }
+            this.registerStore(store);
         }
 
         for(let store of stores) {
-            if(store.store instanceof ServiceStore) {
-                store.store.onAppStoreInitialized(this);
-            }
+            store.onAppStoreInitialized(this);
         }
 
         logger.log("Initial appState", this.appState);
+    }
+
+    private extractStore(serviceOrStore: ServiceOrStore): ServiceStore<any> {
+        if(serviceOrStore instanceof ServiceStore) {
+            return serviceOrStore;
+        }
+        else if(serviceOrStore.store && serviceOrStore.store instanceof ServiceStore) {
+            return serviceOrStore.store;
+        }
+        else {
+            throw new Error("Invalid service/store instance");
+        }
     }
 
     getState(): StateT {
         return this.appState;
     }
 
-    subscribe(listener: (newState, oldState)=>void) {
+    subscribe(listener: StoreListener<StateT>): StoreSubscription {
         this.listeners.push(listener);
+
+        return ()=> {
+            this.unsubscribe(listener);
+        }
     }
 
-    unsubscribe(listener: (newState, oldState)=>void) {
-        const index = this.listeners.findIndex(l => l == listener);
+    unsubscribe(listener: StoreListener<StateT>) {
+        const index = this.listeners.indexOf(listener);
         if(index != -1) {
             this.listeners.splice(index, 1);
         }

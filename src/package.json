@@ -1,6 +1,6 @@
 {
   "name": "t-rex",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "t-rex.umd.js",
   "module": "t-rex.es2015.js",
   "scripts": {
@@ -14,7 +14,6 @@
       "type": "MIT"
     }
   ],
-  "devDependencies": {
-    "typescript": "^2.2.2"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

@@ -15,11 +15,8 @@ describe("ServiceStore", function() {
     }
 
     class RootService {
-        store: ServiceStore<AppState> = new ServiceStore<AppState>({
-            path: "/",
-            initialState: {
-                counters: null,
-            }
+        store: ServiceStore<AppState> = ServiceStore.create<AppState>("/", {
+            counters: null,
         });
 
         constructor(private counterStore: CounterService, private authStore: AuthService) {
@@ -47,11 +44,8 @@ describe("ServiceStore", function() {
     }
 
     class CounterService {
-        store: ServiceStore<CounterState> = new ServiceStore<CounterState>({
-            path: "counters",
-            initialState: {
-                value: 0,
-            }
+        store: ServiceStore<CounterState> = ServiceStore.create<CounterState>("counters", {
+            value: 0,
         });
 
         get state() {
@@ -118,9 +112,9 @@ describe("ServiceStore", function() {
     }
 
     let appStore: AppStore<AppState>;
-    let counterStore: CounterService;
-    let authStore: AuthService;
-    let rootStore: RootService;
+    let counterService: CounterService;
+    let authService: AuthService;
+    let rootService: RootService;
 
     beforeEach(function() {
         jasmine.addMatchers({
@@ -129,28 +123,28 @@ describe("ServiceStore", function() {
         });
 
         appStore = new AppStore<AppState>();
-        counterStore = new CounterService();
-        authStore = new AuthService();
-        rootStore = new RootService(counterStore, authStore);
+        counterService = new CounterService();
+        authService = new AuthService();
+        rootService = new RootService(counterService, authService);
 
         appStore.init([
-            rootStore,
-            authStore,
-            counterStore
+            rootService,
+            authService,
+            counterService
         ]);
     });
 
     it("with @Activity automatically commits changes to appStore", async function(done) {
-        await counterStore.inc();
-        expect(rootStore.state.counters.value).toBe(1);
+        await counterService.inc();
+        expect(rootService.state.counters.value).toBe(1);
 
         done();
     });
 
     it("Supports nested trasactions", async function(done) {
-        await rootStore.incAndLogin("Ori");
+        await rootService.incAndLogin("Ori");
 
-        expect(rootStore.state).toDeeplyEqual({
+        expect(rootService.state).toDeeplyEqual({
             counters: {
                 value: 1,
             },
@@ -164,13 +158,13 @@ describe("ServiceStore", function() {
     });
 
     it("No commit in case of exception", async function(done) {
-        const beforeState = collectValues(rootStore.state);
+        const beforeState = collectValues(rootService.state);
         try {
-            await rootStore.incAndFail();
+            await rootService.incAndFail();
         }
         catch(err) {
         }
-        const afterState = collectValues(rootStore.state);
+        const afterState = collectValues(rootService.state);
 
         expect(afterState).toBeEqualArray(beforeState);
 
@@ -179,7 +173,7 @@ describe("ServiceStore", function() {
 
     it("Does not allow second commit", async function(done) {
         let tranScope;
-        await authStore.loginAndRunCallback("userName", function() {
+        await authService.loginAndRunCallback("userName", function() {
             tranScope = TransactionScope.current();
         });
 
@@ -192,11 +186,11 @@ describe("ServiceStore", function() {
 
     it("subscribeTo fires when specific property has changed", async function (done) {
         let fired = false;
-        authStore.store.subscribeTo("userName", (newState, oldState)=> {
+        authService.store.subscribeTo("userName", (newState, oldState)=> {
             fired = true;
         });
 
-        await authStore.login("Ori");
+        await authService.login("Ori");
 
         //await authStore.logout();
 
@@ -208,7 +202,7 @@ describe("ServiceStore", function() {
 
     it("subscribeTo does not fire on specific property that was not changed", async function (done) {
         let fired;
-        authStore.store.subscribeTo("userName", (newState, oldState)=> {
+        authService.store.subscribeTo("userName", (newState, oldState)=> {
             fired = true;
         });
         fired = false;
@@ -357,61 +351,37 @@ describe("ServiceStore", function() {
         done();
     });
 
-    it("does not raise error when parallel transactions update different branches", async function (done) {
-        interface Branch1State {
-            obj: any;
-        }
+    it("notifies listeners when change occurs", function() {
+        let notified: boolean = false;
 
-        interface AppState {
-            branch1: Branch1State;
-        }
+        appStore.subscribe(()=> {
+            notified = true;
+        });
 
-        function delay(ms) {
-            return new Promise((resolve, reject)=> {
-                setTimeout(function() {
-                    resolve();
-                }, ms);
+        transaction(appStore, ()=> {
+            counterService.store.update({
+                value: counterService.state.value + 1,
             });
-        }
+        });
 
-        class Service1 {
-            store = ServiceStore.create<Branch1State>("branch1", {
-                obj: null,
+        expect(notified).toBe(true);
+    });
+
+    it("does not notify listener which unsubscribe", function() {
+        let notified: boolean = false;
+
+        const off = appStore.subscribe(()=> {
+            notified = true;
+        });
+
+        off();
+
+        transaction(appStore, ()=> {
+            counterService.store.update({
+                value: counterService.state.value + 1,
             });
+        });
 
-            get state() {
-                return this.store.getState();
-            }
-
-            @Activity()
-            async load() {
-                await delay(0);
-
-                await this.store.update({
-                    obj: {}
-                })
-            }
-        }
-
-        const appStore = new AppStore<AppState>();
-        const service1 = new Service1();
-        appStore.init([
-            service1,
-        ]);
-
-        let thrown = false;
-        try {
-            await Promise.all([
-                service1.load(),
-                service1.load(),
-            ]);
-        }
-        catch(err) {
-            thrown = true;
-        }
-
-        expect(thrown).toEqual(false);
-
-        done();
+        expect(notified).toBe(false);
     });
 });

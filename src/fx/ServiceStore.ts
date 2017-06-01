@@ -1,4 +1,4 @@
-import {AppStore, StoreListener} from "./AppStore";
+import {AppStore, StoreListener, StoreSubscription} from "./AppStore";
 import {TransactionScope} from "./TransactionScope";
 import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
@@ -24,6 +24,15 @@ export class ServiceStore<StateT extends object> {
         this.listeners = [];
     }
 
+    runWithOwnAppStore() {
+        logger.log("runWithOwnAppStore");
+
+        const appStore = new AppStore<any>();
+        appStore.init([
+            this
+        ]);
+    }
+
     onAppStoreInitialized(appStore: AppStore<any>) {
         this.appStore = appStore;
 
@@ -36,7 +45,7 @@ export class ServiceStore<StateT extends object> {
         });
     }
 
-    subscribe(listener: (newState: StateT, oldState: StateT)=>void) {
+    subscribe(listener: StoreListener<StateT>): StoreSubscription {
         this.ensureInitialized();
 
         this.listeners.push(listener);
@@ -46,6 +55,17 @@ export class ServiceStore<StateT extends object> {
         //
         const state = this.pathResolver.get(this.appStore.getState());
         listener(state, state);
+
+        return () => {
+            this.unsubscribe(listener);
+        }
+    }
+
+    unsubscribe(listener: StoreListener<StateT>) {
+        const index = this.listeners.indexOf(listener);
+        if(index != -1) {
+            this.listeners.splice(index, 1);
+        }
     }
 
     subscribeTo(path: string, listener: (newState, oldState)=>void) {
@@ -96,7 +116,7 @@ export class ServiceStore<StateT extends object> {
         return this.metadata;
     }
 
-    getState(): StateT {
+    getState(): Readonly<StateT> {
         this.ensureInitialized();
 
         const tranScope = TransactionScope.current();

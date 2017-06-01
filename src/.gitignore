@@ -7,6 +7,5 @@ spec/**/*.js.map
 build/main.js
 build/main.js.map
 yarn-error.log
-yarn.lock
 build_tmp
 package
