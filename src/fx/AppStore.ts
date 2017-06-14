@@ -25,6 +25,7 @@ export class AppStore<StateT extends object> {
     private listeners: StoreListener<StateT>[];
     private appState: StateT;
     private stores: ServiceStore<any>[];
+    private activityListeners: ActivityListener[] = [];
 
     constructor() {
         this.appState = <any>{};
@@ -137,4 +138,39 @@ export class AppStore<StateT extends object> {
 
         return null;
     }
+
+    registerListener(listener: ActivityListener) {
+        this.activityListeners.push(listener);
+    }
+
+    unregisterListener(listener: ActivityListener) {
+        const index = this.activityListeners.indexOf(listener);
+        if(index != -1) {
+            this.listeners.splice(index, 1);
+        }
+    }
+
+    private emitActivityEvent(func: (l:ActivityListener)=>void) {
+        for(let listener of this.activityListeners) {
+            func(listener);
+        }
+    }
+
+    _onActivityError(err) {
+        logger.log("onActivityError", err);
+
+        this.emitActivityEvent(l=>l.onActivityError(err));
+    }
+
+    _onActivitySuccess(res) {
+        logger.log("onActivitySuccess", res);
+
+        this.emitActivityEvent(l=>l.onActivitySuccess(res));
+    }
+
+}
+
+export interface ActivityListener {
+    onActivitySuccess(res: any);
+    onActivityError(err: any);
 }

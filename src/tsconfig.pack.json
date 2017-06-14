@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "sourceMap": false,
+    "removeComments": false,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "inlineSourceMap": true,
+    "declaration": true,
+    "outDir": "./build_tmp"
+  },
+  "files": [
+    "fx/index.ts",
+    "build/main.ts",
+    "spec/index.ts",
+    "globals.d.ts"
+  ]
+}

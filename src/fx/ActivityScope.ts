@@ -1,155 +1,84 @@
-import {AppStore} from "./AppStore";
-import {TransactionalObject} from "./TransactionalObject";
 import {createLogger, Logger} from "./logger";
+import {AppStore} from "./AppStore";
 
-if(typeof Zone === "undefined") {
-    throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
-}
-
-export class TransactionScope {
-    private appStore: AppStore<any>;
-    private tranState: TransactionalObject<any>;
-    private committed: boolean;
+export class ActivityScope {
     private outerZone: Zone;
     private id: number;
     private logger: Logger;
-    private updateCount: number;
 
-    private static nextTranId = 0;
+    private static nextActivityId = 0;
 
-    constructor(appStore: AppStore<any>) {
-        this.id = ++TransactionScope.nextTranId;
-        this.logger = createLogger("TransactionScope(" + this.id + ")");
-        this.updateCount = 0;
-        this.appStore = appStore;
-        this.tranState = new TransactionalObject(appStore.getState());
-        this.committed = false;
+    constructor() {
+        this.id = ++ActivityScope.nextActivityId;
+        this.logger = createLogger("ActivityScope(" + this.id + ")");
         this.outerZone = Zone.current;
 
         this.logger.log("created");
     }
 
-    public update(path: string, changes: any) {
-        ++this.updateCount;
-        this.logger.log("update", path, changes);
-
-        this.ensureNotCommitted();
-
-        this.tranState.setProperty(path, changes);
+    static current(): ActivityScope {
+        let activity: ActivityScope = Zone.current.get("activity");
+        return activity;
     }
 
-    public getNewState() {
-        return this.tranState.getCurrent();
-    }
+    static runInsideActivity<StateT>(appStore: AppStore<any>, action) {
+        function runAction(func, isRoot: boolean) {
+            let retVal;
 
-    public getOldState() {
-        return this.tranState.getBase();
-    }
+            try {
+                retVal = func();
 
-    public commit() {
-        this.ensureNotCommitted();
-
-        let oldState = this.tranState.getBase();
-        let newState = this.tranState.getCurrent();
-        const currentState = this.appStore.getState();
-
-        if(newState == currentState) {
-            this.logger.log("Nothing new to commit. updateCount is", this.updateCount);
-            return;
-        }
-
-        if(oldState != currentState) {
-            //
-            //  A parallel transaction has already modified the main store before us
-            //  We only allow parallel changes at different branches. Else, "Concurrency error is raised"
-            //
-            this.tranState.rebase(currentState);
-
-            oldState = this.tranState.getBase();
-            newState = this.tranState.getCurrent();
-        }
-
-        this.committed = true;
-
-        this.outerZone.run(()=> {
-            //
-            //  Committing to appStore causes emitting of change event
-            //  Subscribers must be notified outside of the transaction zone, else, any
-            //  additional update will be considered as part of the already committed transaction
-            //  and therefore will throw error
-            //
-            this.appStore.commit(oldState, newState);
-        });
-
-        //
-        //  Cleans management flags + switch between old and new
-        //
-        this.tranState.commit();
-
-        this.logger.log("committed");
-    }
-
-    static current(): TransactionScope {
-        let tran: TransactionScope = Zone.current.get("tran");
-        return tran;
-    }
-
-    static runInsideTransaction<StateT>(appStore: AppStore<any>, action) {
-        function runAction(func, commit) {
-            var retVal = func();
-            if(retVal && retVal.then) {
-                const promise = retVal;
-                return promise.then(res => {
-                    if(commit) {
-                        tran.commit();
+                if(isRoot) {
+                    if(retVal && retVal.catch) {
+                        retVal.then(function(res) {
+                            appStore._onActivitySuccess(res);
+                        }, function(err) {
+                            appStore._onActivityError(err);
+                        });
                     }
-
-                    return res;
-                });
-            }
-            else {
-                if(commit) {
-                    tran.commit();
+                    else {
+                        appStore._onActivitySuccess(retVal);
+                    }
                 }
 
                 return retVal;
             }
+            catch(err) {
+                if(isRoot) {
+                    appStore._onActivityError(err);
+                    return;
+                }
+                else {
+                    throw err;
+                }
+            }
         }
 
-        let tran: TransactionScope = TransactionScope.current();
-        if(tran) {
-            tran.ensureNotCommitted();
-
+        let activity: ActivityScope = ActivityScope.current();
+        if(activity) {
             //
-            //  This is a nested transaction
-            //  No need to commit changes to app base
+            //  This is a nested activity
+            //  No need to catch errors
             //
             return runAction(action, false);
         }
 
         //
-        //  This is a root transaction
-        //  When completed need to commit to the appStore
+        //  This is a root activity
+        //  Need to monitor for errors and emit event when error has happended
         //
-        tran = new TransactionScope(appStore);
+        activity = new ActivityScope();
 
         const spec: ZoneSpec = {
-            name: "tran",
+            name: "activity",
             properties: {
-                "tran": tran,
+                "activity": activity,
             },
         };
 
         const zone = Zone.current.fork(spec);
         return zone.run(function () {
-            var tran1 = TransactionScope.current();
             return runAction(action, true);
         });
-    }
-
-    private ensureNotCommitted() {
-        if(this.committed) {
-            throw new Error("Activity was already committed");
-        }
     }
 }

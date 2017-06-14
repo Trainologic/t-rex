@@ -4,6 +4,7 @@ import {AppStore} from "./AppStore";
 import {createLogger} from "./logger";
 import {IService} from "./Service";
 import {config} from "./config";
+import {ActivityScope} from "./ActivityScope";
 
 const logger = createLogger("decorators");
 
@@ -112,16 +113,19 @@ export function Activity(options?: ActivityOptions) {
         descriptor.value = function (...args) {
             const service = this;
             let appStore = getAppStoreFromService(service);
-
             const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", config.activityAutoBeginTransaction);
-            if(beginTransaction) {
-                return TransactionScope.runInsideTransaction(appStore, function () {
+
+            return ActivityScope.runInsideActivity(appStore, ()=> {
+                if(beginTransaction) {
+                    return TransactionScope.runInsideTransaction(appStore, function () {
+                        return method.apply(service, args);
+                    });
+                }
+                else {
                     return method.apply(service, args);
-                });
-            }
-            else {
-                return method.apply(service, args);
-            }
+                }
+            });
+
         }
 
         return descriptor;
