@@ -1,6 +1,6 @@
 {
   "name": "t-rex",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "main": "t-rex.umd.js",
   "module": "t-rex.es2015.js",
   "scripts": {
