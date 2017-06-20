@@ -8,12 +8,6 @@ import {RootService} from "./root.service";
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  filter: string;
-
-  constructor(private contactService: ContactService) {
-  }
-
-  filter(filter) {
-    this.contactService.filter(filter);
+  constructor() {
   }
 }

@@ -131,3 +131,9 @@ export function Activity(options?: ActivityOptions) {
         return descriptor;
     }
 }
+
+export function Reaction() {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        return descriptor;
+    }
+}

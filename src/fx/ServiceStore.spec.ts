@@ -390,7 +390,6 @@ describe("ServiceStore", function() {
     });
 
     it("Allows for update without transaction when updateAutoBeginTransaction is true", function() {
-
         configure({
             updateAutoBeginTransaction: true,
         });
@@ -409,6 +408,19 @@ describe("ServiceStore", function() {
             configure({
                 updateAutoBeginTransaction: false,
             });
+        }
+    });
+
+    it("Does not allow for update without ambient transaction", function() {
+        try {
+            counterService.store.update({
+                value: counterService.state.value + 1,
+            });
+
+            expect(false).toBe(true);
+        }
+        catch (err) {
+            expect(true).toBe(true);
         }
     });
 });

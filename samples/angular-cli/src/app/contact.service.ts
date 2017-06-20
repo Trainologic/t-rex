@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {Activity, ServiceStore, transaction} from "t-rex";
-import {push} from "./common/immutable";
+import {ServiceStore, Activity, push, dec} from "t-rex";
+import {Reaction} from "t-rex/decorators";
 
 export interface Contact {
     id: number;
@@ -10,14 +10,19 @@ export interface Contact {
 export interface ContactsState {
   all: Contact[];
   filtered: Contact[];
+  filter: string;
   nextId: number;
 }
 
 @Injectable()
 export class ContactService {
   store = ServiceStore.create<ContactsState>("contacts", {
-    all: null,
+    all: [
+      {"id": 1, "name": "Ori"},
+      {"id": 2, "name": "Roni"},
+    ],
     filtered: null,
+    filter: "",
     nextId: -1,
   });
 
@@ -28,26 +33,10 @@ export class ContactService {
     return this.store.getState();
   }
 
-  init() {
-    const all = [
-      {"id": 1, "name": "Ori"},
-      {"id": 2, "name": "Roni"},
-    ];
-
-    transaction(this.store, ()=> {
-      this.store.update({
-        all: all,
-        filtered: all,
-      });
-    });
-  }
-
   @Activity()
   filter(filter: string) {
-    transaction(this.store, ()=> {
-      this.store.update({
-        filtered: this.state.all.filter(c => c.name.toLowerCase().indexOf(filter.toLowerCase())!=-1),
-      });
+    this.store.update({
+      filter: filter
     });
   }
 
@@ -57,35 +46,22 @@ export class ContactService {
       throw new Error("Name must be non empty");
     }
 
-    this.transaction((store, state) => {
-      const contact = {id: this.generateId(), name: name};
+    const contact = {id: this.generateId(), name: name};
 
-      store.update({
-        all: push(state.all, contact)
-      });
+    this.store.update(state => ({
+      all: push(contact)
+    }));
+  }
 
-      this.filter()
-    });
+  @Reaction()
+  react() {
+    this.store.update(state => ({
+      filtered: state.all.filter(c => c.name.toLowerCase().indexOf(state.filter.toLowerCase())!=-1)
+    }));
   }
 
   private generateId() {
-    let id;
-
-    this.transaction((store, state) => {
-      id = state.nextId - 1;
-
-      store.update({
-        nextId: id,
-      });
-    });
-
-    return id;
-  }
-
-  private transaction(action: (store: ServiceStore<ContactsState>, state: ContactsState)=>any) {
-    return transaction(this.store, ()=> {
-      return action(this.store, this.store.getState());
-    });
+    return this.store.update("nextId", dec());
   }
 }
 

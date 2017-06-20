@@ -8,12 +8,14 @@ import { ContactListComponent } from './contact-list/contact-list.component';
 import {RootService} from "./root.service";
 import {ContactService} from "./contact.service";
 import { ContactAddComponent } from './contact-add/contact-add.component';
+import { ContactSearchComponent } from './contact-search/contact-search.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ContactListComponent,
-    ContactAddComponent
+    ContactAddComponent,
+    ContactSearchComponent
   ],
   imports: [
     BrowserModule,
