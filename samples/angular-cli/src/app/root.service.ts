@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import {ContactService, ContactServiceState} from "./contact.service";
+import {ContactService, ContactsState} from "./contact.service";
 import {AppStore} from "t-rex";
 
 export interface AppState {
-  contacts: ContactServiceState
+  contacts: ContactsState
 }
 
 @Injectable()
@@ -18,5 +18,9 @@ export class RootService {
 
   init() {
     this.contactService.init();
+  }
+
+  addContact(name: string) {
+    this.contactService.add(name);
   }
 }

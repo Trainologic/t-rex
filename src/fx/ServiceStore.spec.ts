@@ -388,4 +388,27 @@ describe("ServiceStore", function() {
 
         expect(notified).toBe(false);
     });
+
+    it("Allows for update without transaction when updateAutoBeginTransaction is true", function() {
+
+        configure({
+            updateAutoBeginTransaction: true,
+        });
+
+        try {
+            counterService.store.update({
+                value: counterService.state.value + 1,
+            });
+
+            expect(true).toBe(true);
+        }
+        catch (err) {
+            expect(false).toBe(true);
+        }
+        finally {
+            configure({
+                updateAutoBeginTransaction: false,
+            });
+        }
+    });
 });

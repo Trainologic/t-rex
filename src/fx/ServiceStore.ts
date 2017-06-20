@@ -3,6 +3,7 @@ import {TransactionScope} from "./TransactionScope";
 import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
 import {createLogger} from "./logger";
+import {config} from "./config";
 
 const logger = createLogger("ServiceStore");
 
@@ -130,11 +131,22 @@ export class ServiceStore<StateT extends object> {
 
         this.ensureInitialized();
 
-        const tranScope = TransactionScope.current();
-        if(!tranScope) {
-            throw new Error("No ambient transaction to update");
+        if(config.updateAutoBeginTransaction) {
+            return TransactionScope.runInsideTransaction(this.appStore, ()=> {
+                return this.doUpdate(TransactionScope.current(), changes);
+            });
         }
+        else {
+            const tranScope = TransactionScope.current();
+            if (!tranScope) {
+                throw new Error("No ambient transaction to update");
+            }
 
+            return this.doUpdate(TransactionScope.current(), changes);
+        }
+    }
+
+    private doUpdate(tranScope: TransactionScope, changes: Partial<StateT>) {
         tranScope.update(this.metadata.path, changes);
 
         const state = this.pathResolver.get(tranScope.getNewState());

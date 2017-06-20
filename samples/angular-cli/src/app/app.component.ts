@@ -13,7 +13,7 @@ export class AppComponent {
   constructor(private contactService: ContactService) {
   }
 
-  run(filter) {
+  filter(filter) {
     this.contactService.filter(filter);
   }
 }

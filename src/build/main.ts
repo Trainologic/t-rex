@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as cli from "build-utils/cli";
-import {copyFile, deleteDirectory, createDirectory, copyGlob} from "build-utils/fs";
+import {copyFile, copyGlob, deleteDirectory} from "build-utils/fs";
 import {mergeConfig, updateConfig} from "build-utils/config";
 import {exec} from "build-utils/process";
 
