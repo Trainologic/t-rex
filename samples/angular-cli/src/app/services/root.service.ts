@@ -16,10 +16,6 @@ export class RootService {
     ]);
   }
 
-  init() {
-    this.contactService.init();
-  }
-
   addContact(name: string) {
     this.contactService.add(name);
   }

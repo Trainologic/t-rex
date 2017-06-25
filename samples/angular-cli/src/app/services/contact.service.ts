@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {ServiceStore, Activity, push, dec} from "t-rex";
 import {Reaction} from "t-rex/decorators";
+import {contains} from "../common/stringHelpers";
 
 export interface Contact {
     id: number;
@@ -48,19 +49,19 @@ export class ContactService {
 
     const contact = {id: this.generateId(), name: name};
 
-    this.store.update(state => ({
+    this.store.update({
       all: push(contact)
-    }));
+    });
   }
 
   @Reaction()
   react() {
     this.store.update(state => ({
-      filtered: state.all.filter(c => c.name.toLowerCase().indexOf(state.filter.toLowerCase())!=-1)
+      filtered: state.all.filter(c => contains(c.name, state.filter))
     }));
   }
 
-  private generateId() {
+  private generateId(): number {
     return this.store.update("nextId", dec());
   }
 }

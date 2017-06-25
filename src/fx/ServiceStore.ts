@@ -126,13 +126,35 @@ export class ServiceStore<StateT extends object> {
         return state;
     }
 
-    update(changes: Partial<StateT>): StateT {
-        logger.log("update", changes);
+    update(changesOrFunc: Partial<StateT>): StateT
+    update(func: (s: StateT) => Partial<StateT>): StateT
+    update<K extends keyof StateT>(key: K, value: StateT[K]): StateT[K]
+    update(key: any, value?: any): any {
+        logger.log("update");
+
+        let changes: Partial<StateT>;
+
+        if(arguments.length == 2) {
+            changes = {
+            };
+
+            changes[key] = value;
+        }
+        else if(typeof key == "object") {
+            changes = key;
+        }
+        else {
+            changes = key(this.getState());
+        }
+
+        logger.log("    changes are", changes);
 
         this.ensureInitialized();
 
+        let updated: StateT;
+
         if(config.updateAutoBeginTransaction) {
-            return TransactionScope.runInsideTransaction(this.appStore, ()=> {
+            updated = TransactionScope.runInsideTransaction(this.appStore, ()=> {
                 return this.doUpdate(TransactionScope.current(), changes);
             });
         }
@@ -142,8 +164,14 @@ export class ServiceStore<StateT extends object> {
                 throw new Error("No ambient transaction to update");
             }
 
-            return this.doUpdate(TransactionScope.current(), changes);
+            updated = this.doUpdate(TransactionScope.current(), changes);
         }
+
+        if(arguments.length == 2) {
+            return updated[key];
+        }
+
+        return updated;
     }
 
     private doUpdate(tranScope: TransactionScope, changes: Partial<StateT>) {

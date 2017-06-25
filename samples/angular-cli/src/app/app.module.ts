@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
-import { ContactListComponent } from './contact-list/contact-list.component';
-import {RootService} from "./root.service";
-import {ContactService} from "./contact.service";
-import { ContactAddComponent } from './contact-add/contact-add.component';
-import { ContactSearchComponent } from './contact-search/contact-search.component';
+import { ContactListComponent } from './components/contact-list/contact-list.component';
+import {RootService} from "./services/root.service";
+import {ContactService} from "./services/contact.service";
+import { ContactAddComponent } from './components/contact-add/contact-add.component';
+import { ContactSearchComponent } from './components/contact-search/contact-search.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +30,5 @@ import { ContactSearchComponent } from './contact-search/contact-search.componen
 })
 export class AppModule {
   constructor(rootService: RootService) {
-    rootService.init();
   }
 }
