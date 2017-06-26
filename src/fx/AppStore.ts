@@ -25,12 +25,14 @@ export class AppStore<StateT extends object> {
     private listeners: StoreListener<StateT>[];
     private appState: StateT;
     private stores: ServiceStore<any>[];
+    private services: IService<any>[];
     private activityListeners: ActivityListener[] = [];
 
     constructor() {
         this.appState = <any>{};
         this.listeners = [];
         this.stores = [];
+        this.services = [];
     }
 
     init(servicesOrStores: ServiceOrStore[]) {
@@ -40,11 +42,37 @@ export class AppStore<StateT extends object> {
             this.registerStore(store);
         }
 
+        for(let service of servicesOrStores) {
+            if(!(service instanceof ServiceStore)) {
+                this.services.push(service);
+            }
+        }
+
         for(let store of stores) {
             store.onAppStoreInitialized(this);
         }
 
+        this.runReactions();
+
         logger.log("Initial appState", this.appState);
+    }
+
+    private runReactions() {
+        logger.log("Running reactions");
+
+        for(let service of this.services) {
+            const reactions = Reflect.get(service.constructor, "reactions");
+            if(reactions) {
+                for(let reaction of reactions) {
+                    const method = service[reaction];
+                    if(method) {
+                        logger.log("    " + service.constructor.name + "." + reaction);
+
+                        method.call(service);
+                    }
+                }
+            }
+        }
     }
 
     private extractStore(serviceOrStore: ServiceOrStore): ServiceStore<any> {
@@ -91,6 +119,8 @@ export class AppStore<StateT extends object> {
         logger.log("Changing state", oldState, " ==> ", newState);
 
         this.appState = newState;
+
+        this.runReactions();
 
         this.emit(oldState, newState);
 

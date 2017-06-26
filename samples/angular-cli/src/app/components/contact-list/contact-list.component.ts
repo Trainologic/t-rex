@@ -6,11 +6,8 @@ import {ContactService} from "../../services/contact.service";
   templateUrl: './contact-list.component.html',
   styleUrls: ['./contact-list.component.css']
 })
-export class ContactListComponent implements OnInit {
+export class ContactListComponent {
   constructor(private contactService: ContactService) { }
-
-  ngOnInit() {
-  }
 
   get contacts() {
     return this.contactService.state.filtered;

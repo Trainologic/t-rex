@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import {ServiceStore, Activity, push, dec} from "t-rex";
-import {Reaction} from "t-rex/decorators";
+import {ServiceStore, Activity, push, dec, transaction} from "t-rex";
+import {Reaction} from "t-rex";
 import {contains} from "../common/stringHelpers";
 
 export interface Contact {
@@ -47,10 +47,12 @@ export class ContactService {
       throw new Error("Name must be non empty");
     }
 
-    const contact = {id: this.generateId(), name: name};
+    transaction(this.store, ()=> {
+      const contact = {id: this.generateId(), name: name};
 
-    this.store.update({
-      all: push(contact)
+      this.store.update({
+        all: push(contact)
+      });
     });
   }
 

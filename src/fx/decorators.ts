@@ -134,6 +134,20 @@ export function Activity(options?: ActivityOptions) {
 
 export function Reaction() {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const ctor = target.constructor;
+        if(!ctor) {
+            logger.warn("Target of @Reaction has no constructor")
+            return;
+        }
+
+        let reactions = Reflect.get(ctor, "reactions");
+        if(!reactions) {
+            reactions = [];
+            Reflect.set(ctor, "reactions", reactions);
+        }
+
+        reactions.push(propertyKey);
+
         return descriptor;
     }
 }

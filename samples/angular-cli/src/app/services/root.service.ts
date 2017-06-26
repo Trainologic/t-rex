@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import {ContactService, ContactsState} from "./contact.service";
-import {AppStore} from "t-rex";
+import {AppStore, configure} from "t-rex";
+
+configure({
+  enableLogging: true,
+  activityAutoBeginTransaction: false,
+  updateAutoBeginTransaction: true,
+});
 
 export interface AppState {
   contacts: ContactsState

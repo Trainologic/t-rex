@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
+import {ContactService} from "../../services/contact.service";
 
 @Component({
   selector: 'app-contact-add',
   templateUrl: './contact-add.component.html',
   styleUrls: ['./contact-add.component.css']
 })
-export class ContactAddComponent implements OnInit {
+export class ContactAddComponent {
+  name: string;
 
-  constructor() { }
+  constructor(private contactService: ContactService) { }
 
-  ngOnInit() {
+  add() {
+    this.contactService.add(this.name);
   }
-
 }

@@ -4,6 +4,7 @@ import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
 import {createLogger} from "./logger";
 import {config} from "./config";
+import {StoreOperator} from "./commands";
 
 const logger = createLogger("ServiceStore");
 
@@ -175,9 +176,18 @@ export class ServiceStore<StateT extends object> {
     }
 
     private doUpdate(tranScope: TransactionScope, changes: Partial<StateT>) {
+        const state = this.getState();
+        const changesWithOperators = changes;
+        for(let key in changesWithOperators) {
+            const value = changesWithOperators[key];
+            if(value instanceof StoreOperator) {
+                changes[key] = value.execute(state[key]);
+            }
+        }
+
         tranScope.update(this.metadata.path, changes);
 
-        const state = this.pathResolver.get(tranScope.getNewState());
+        //const state = this.pathResolver.get(tranScope.getNewState());
         logger.log("update new state is", state);
         return state;
     }
