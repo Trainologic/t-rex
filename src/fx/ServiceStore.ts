@@ -4,7 +4,7 @@ import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
 import {createLogger} from "./logger";
 import {config} from "./config";
-import {StoreOperator} from "./commands";
+import {StoreOperator} from "./operators";
 
 const logger = createLogger("ServiceStore");
 

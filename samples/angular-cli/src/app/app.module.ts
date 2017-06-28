@@ -1,3 +1,5 @@
+import {configure} from "t-rex";
+
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +11,12 @@ import {RootService} from "./services/root.service";
 import {ContactService} from "./services/contact.service";
 import { ContactAddComponent } from './components/contact-add/contact-add.component';
 import { ContactSearchComponent } from './components/contact-search/contact-search.component';
+
+configure({
+  enableLogging: false,
+  activityAutoBeginTransaction: false,
+  updateAutoBeginTransaction: true,
+});
 
 @NgModule({
   declarations: [

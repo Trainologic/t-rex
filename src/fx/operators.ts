@@ -21,13 +21,19 @@ export class PushOperator extends StoreOperator {
     }
 }
 
-export class IncrementCommand {
-    constructor() {
+export class IncrementOperator extends StoreOperator {
+    execute(data: any): any {
+        logger.log("IncrementOperator.execute", data);
+
+        return data + 1;
     }
 }
 
-export class DecrementCommand {
-    constructor() {
+export class DecrementOperator extends StoreOperator {
+    execute(data: any): any {
+        logger.log("DecrementOperator.execute", data);
+
+        return data - 1;
     }
 }
 
@@ -36,9 +42,9 @@ export function push(item): any {
 }
 
 export function dec(): any {
-    return new DecrementCommand();
+    return new DecrementOperator();
 }
 
 export function inc(): any {
-    return new IncrementCommand();
+    return new IncrementOperator();
 }

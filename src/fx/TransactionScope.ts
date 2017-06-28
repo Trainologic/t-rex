@@ -69,6 +69,10 @@ export class TransactionScope {
             newState = this.tranState.getCurrent();
         }
 
+        this.appStore.runReactions();
+
+        this.appStore.commit(oldState, newState);
+
         this.committed = true;
 
         this.outerZone.run(()=> {
@@ -78,7 +82,7 @@ export class TransactionScope {
             //  additional update will be considered as part of the already committed transaction
             //  and therefore will throw error
             //
-            this.appStore.commit(oldState, newState);
+            this.appStore.emit(oldState, newState);
         });
 
         //

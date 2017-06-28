@@ -57,7 +57,7 @@ export class AppStore<StateT extends object> {
         logger.log("Initial appState", this.appState);
     }
 
-    private runReactions() {
+    runReactions() {
         logger.log("Running reactions");
 
         for(let service of this.services) {
@@ -120,14 +120,14 @@ export class AppStore<StateT extends object> {
 
         this.appState = newState;
 
-        this.runReactions();
+        //this.runReactions();
 
-        this.emit(oldState, newState);
+        //this.emit(oldState, newState);
 
         return this.appState;
     }
 
-    private emit(oldState, newState) {
+    emit(oldState, newState) {
         for (let l of this.listeners) {
             try {
                 l(this.appState, oldState);
