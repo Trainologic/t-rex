@@ -13,7 +13,7 @@ import { ContactAddComponent } from './components/contact-add/contact-add.compon
 import { ContactSearchComponent } from './components/contact-search/contact-search.component';
 
 configure({
-  enableLogging: false,
+  enableLogging: true,
   activityAutoBeginTransaction: false,
   updateAutoBeginTransaction: true,
 });

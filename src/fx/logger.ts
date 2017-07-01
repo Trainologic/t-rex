@@ -18,20 +18,10 @@ export class Logger {
     warn() {}
 }
 
-// const nullLogger = {
-//     log: function(){},
-//     error: function(){},
-//     warn: function(){},
-// };
-
 export const enableLogging = function(enable) {
     for(let logger of loggers) {
         enableLogger(logger, enable);
     }
-
-    // configure({
-    //     enableLogging: enable
-    // });
 }
 
 function noop() {

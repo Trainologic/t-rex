@@ -14,6 +14,7 @@ export class TransactionScope {
     private id: number;
     private logger: Logger;
     private updateCount: number;
+    private oldState: any;
 
     private static nextTranId = 0;
 
@@ -22,20 +23,29 @@ export class TransactionScope {
         this.logger = createLogger("TransactionScope(" + this.id + ")");
         this.updateCount = 0;
         this.appStore = appStore;
-        this.tranState = new TransactionalObject(appStore.getState());
+        this.oldState = appStore.getState();
+        this.tranState = new TransactionalObject(this.oldState);
         this.committed = false;
         this.outerZone = Zone.current;
 
-        this.logger.log("created");
+        this.logger.log("created", this.oldState);
     }
 
     public update(path: string, changes: any) {
-        ++this.updateCount;
-        this.logger.log("update", path, changes);
+        this.logger.log(`update(${++this.updateCount})`, path, changes);
 
         this.ensureNotCommitted();
 
-        this.tranState.setProperty(path, changes);
+        const newState = this.tranState.setProperty(path, changes);
+
+        if(newState != this.oldState) {
+            this.logger.log("newState", newState);
+        }
+        else {
+            this.logger.log("No effective changes");
+        }
+
+        return newState;
     }
 
     public getNewState() {
@@ -69,7 +79,7 @@ export class TransactionScope {
             newState = this.tranState.getCurrent();
         }
 
-        this.appStore.runReactions();
+        this.appStore.executeReactions();
 
         this.appStore.commit(oldState, newState);
 

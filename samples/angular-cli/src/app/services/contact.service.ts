@@ -59,7 +59,7 @@ export class ContactService {
   @Reaction()
   react() {
     this.store.update(state => ({
-      filtered: state.all.filter(c => contains(c.name, state.filter))
+      filtered: state.all.filter(c => contains(c.name, state.filter, false))
     }));
   }
 

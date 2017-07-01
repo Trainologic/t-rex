@@ -2,11 +2,9 @@ import {AppStore, StoreListener, StoreSubscription} from "./AppStore";
 import {TransactionScope} from "./TransactionScope";
 import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
-import {createLogger} from "./logger";
+import {createLogger, Logger} from "./logger";
 import {config} from "./config";
 import {StoreOperator} from "./operators";
-
-const logger = createLogger("ServiceStore");
 
 export interface ServiceStoreMetadata<StateT> {
     path: string,
@@ -18,8 +16,10 @@ export class ServiceStore<StateT extends object> {
     private listeners: StoreListener<StateT>[];
     private metadata: ServiceStoreMetadata<StateT>;
     private pathResolver: PathResolver;
+    private logger: Logger;
 
     constructor(metadata: ServiceStoreMetadata<StateT>) {
+        this.logger = createLogger("ServiceStore(" + metadata.path + ")")
         this.appStore = null;
         this.metadata = metadata;
         this.pathResolver = new PathResolver(this.metadata.path);
@@ -27,15 +27,15 @@ export class ServiceStore<StateT extends object> {
     }
 
     runWithOwnAppStore() {
-        logger.log("runWithOwnAppStore");
+        this.logger.log("runWithOwnAppStore");
 
         const appStore = new AppStore<any>();
         appStore.init([
-            this
+            {store: this}
         ]);
     }
 
-    onAppStoreInitialized(appStore: AppStore<any>) {
+    onRegistered(appStore: AppStore<any>) {
         this.appStore = appStore;
 
         appStore.subscribe((newAppState, oldAppState) => {
@@ -127,12 +127,7 @@ export class ServiceStore<StateT extends object> {
         return state;
     }
 
-    update(changesOrFunc: Partial<StateT>): StateT
-    update(func: (s: StateT) => Partial<StateT>): StateT
-    update<K extends keyof StateT>(key: K, value: StateT[K]): StateT[K]
-    update(key: any, value?: any): any {
-        logger.log("update");
-
+    private resolveUpdateOverloading(key: any, value: any) {
         let changes: Partial<StateT>;
 
         if(arguments.length == 2) {
@@ -148,7 +143,15 @@ export class ServiceStore<StateT extends object> {
             changes = key(this.getState());
         }
 
-        logger.log("    changes are", changes);
+        return changes;
+    }
+
+    update(changesOrFunc: Partial<StateT>): StateT
+    update(func: (s: StateT) => Partial<StateT>): StateT
+    update<K extends keyof StateT>(key: K, value: StateT[K]): StateT[K]
+    update(key: any, value?: any): any {
+        const changes = this.resolveUpdateOverloading.apply(this, arguments);
+        this.logger.log("update", changes);
 
         this.ensureInitialized();
 
@@ -175,21 +178,28 @@ export class ServiceStore<StateT extends object> {
         return updated;
     }
 
-    private doUpdate(tranScope: TransactionScope, changes: Partial<StateT>) {
-        const state = this.getState();
-        const changesWithOperators = changes;
-        for(let key in changesWithOperators) {
-            const value = changesWithOperators[key];
+    private resolveOperators(changes, oldState) {
+        const resolved = {};
+
+        for(let key in changes) {
+            const value = changes[key];
             if(value instanceof StoreOperator) {
-                changes[key] = value.execute(state[key]);
+                resolved[key] = value.execute(oldState[key]);
+            }
+            else {
+                resolved[key] = value;
             }
         }
 
-        tranScope.update(this.metadata.path, changes);
+        return resolved;
+    }
 
-        //const state = this.pathResolver.get(tranScope.getNewState());
-        logger.log("update new state is", state);
-        return state;
+    private doUpdate(tranScope: TransactionScope, changes: Partial<StateT>) {
+        const oldState = this.getState();
+        const resolvedChanges = this.resolveOperators(changes, oldState);
+
+        const newState = tranScope.update(this.metadata.path, resolvedChanges);
+        return newState;
     }
 
     static create<StateT extends object>(path: string, initialState: StateT) {
@@ -205,7 +215,7 @@ export class ServiceStore<StateT extends object> {
                 l(newState, oldState);
             }
             catch(err) {
-                logger.error("Ignoring error during ServiceStore change event", err);
+                this.logger.error("Ignoring error during ServiceStore change event", err);
             }
         }
     }

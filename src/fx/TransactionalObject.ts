@@ -138,7 +138,7 @@ export class TransactionalObject<StateT> {
             newValue = this.setField(parent, field, newValue);
         }
 
-        this.current = newValue;
+        return this.current = newValue;
     }
 
     private setField(parent, field, value) {
@@ -216,19 +216,20 @@ export class TransactionalObject<StateT> {
             return changes;
         }
 
-        const newObj = this.clone(obj);
+        let newObj = null;
 
         for (let field in changes) {
             if (changes.hasOwnProperty(field)) {
                 const newValue = changes[field];
-                const oldValue = newObj[field];
+                const oldValue = obj[field];
 
                 if(oldValue!=newValue) {
+                    newObj = newObj || this.clone(obj);
                     newObj[field] = newValue;
                 }
             }
         }
 
-        return newObj;
+        return newObj || obj;
     }
 }

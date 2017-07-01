@@ -3,6 +3,8 @@ import {PathResolver} from "./PathResolver";
 import {ROOT} from "./TransactionalObject";
 import {createLogger} from "./logger";
 import {IService} from "./Service";
+import {transaction} from "./decorators";
+import {symlinkSync} from "fs";
 
 const logger = createLogger("AppStore");
 
@@ -15,6 +17,12 @@ export interface StoreSubscription {
 }
 
 export type ServiceOrStore = ServiceStore<any> | IService<any>;
+
+export class SystemState {
+    initialized: boolean;
+    nextTranId: number;
+    nextActivityId: number;
+}
 
 //
 //  Holds application base and allow subscribing to changes
@@ -35,44 +43,52 @@ export class AppStore<StateT extends object> {
         this.services = [];
     }
 
-    init(servicesOrStores: ServiceOrStore[]) {
-        const stores: ServiceStore<any>[] = servicesOrStores.map(s => this.extractStore(s));
+    init(services: IService<any>[]) {
+        logger.log("BEGIN - init");
 
-        for(let store of stores) {
-            this.registerStore(store);
+        for(let service of services) {
+            this.registerStore(service.store);
         }
 
-        for(let service of servicesOrStores) {
-            if(!(service instanceof ServiceStore)) {
-                this.services.push(service);
-            }
-        }
+        const systemStore = ServiceStore.create<SystemState>("$$system", {
+            initialized: false,
+            nextActivityId: 1,
+            nextTranId: 1,
+        });
 
-        for(let store of stores) {
-            store.onAppStoreInitialized(this);
-        }
+        this.registerStore(systemStore);
 
-        this.runReactions();
+        this.services = services;
+
+        logger.log("Registered services are", this.services);
+
+        systemStore.update({
+            initialized: true,
+        });
 
         logger.log("Initial appState", this.appState);
+
+        logger.log("END - init");
     }
 
-    runReactions() {
-        logger.log("Running reactions");
+    executeReactions() {
+        logger.log("BEGIN - executeReactions");
 
-        for(let service of this.services) {
+        for (let service of this.services) {
             const reactions = Reflect.get(service.constructor, "reactions");
-            if(reactions) {
-                for(let reaction of reactions) {
+            if (reactions) {
+                for (let reaction of reactions) {
                     const method = service[reaction];
-                    if(method) {
-                        logger.log("    " + service.constructor.name + "." + reaction);
-
+                    if (method) {
+                        logger.log("BEGIN - " + service.constructor.name + "." + reaction);
                         method.call(service);
+                        logger.log("END - " + service.constructor.name + "." + reaction);
                     }
                 }
             }
         }
+
+        logger.log("END - executeReactions");
     }
 
     private extractStore(serviceOrStore: ServiceOrStore): ServiceStore<any> {
@@ -153,6 +169,8 @@ export class AppStore<StateT extends object> {
         }
 
         PathResolver.create(metadata.path).set(this.appState, metadata.initialState);
+
+        store.onRegistered(this);
     }
 
     private findConflictingPath(path: string): ServiceStore<any> {

@@ -65,7 +65,7 @@ export class ActivityScope {
 
         //
         //  This is a root activity
-        //  Need to monitor for errors and emit event when error has happended
+        //  Need to monitor for errors and emit event when error has happened
         //
         activity = new ActivityScope();
 
