@@ -1,9 +1,9 @@
-import {createLogger} from "./logger";
+import {Logger} from "./logger";
 export const ROOT = "/";
 export const $$MODIFIED = "$$t-rex:modified";
 export const $$VERSION = "$$t-rex:version";
 
-const logger = createLogger("TransactionalObject");
+const logger = Logger.create("TransactionalObject");
 
 export class TransactionalObject<StateT> {
     base: StateT;

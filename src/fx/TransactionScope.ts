@@ -1,6 +1,6 @@
 import {AppStore} from "./AppStore";
 import {TransactionalObject} from "./TransactionalObject";
-import {createLogger, Logger} from "./logger";
+import {Logger} from "./logger";
 
 if(typeof Zone === "undefined") {
     throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
@@ -20,7 +20,7 @@ export class TransactionScope {
 
     constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
-        this.logger = createLogger("TransactionScope(" + this.id + ")");
+        this.logger = Logger.create("TransactionScope", `(${this.id})`);
         this.updateCount = 0;
         this.appStore = appStore;
         this.oldState = appStore.getState();

@@ -2,9 +2,9 @@ import {AppStore, StoreListener, StoreSubscription} from "./AppStore";
 import {TransactionScope} from "./TransactionScope";
 import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
-import {createLogger, Logger} from "./logger";
 import {config} from "./config";
 import {StoreOperator} from "./operators";
+import {Logger} from "./logger";
 
 export interface ServiceStoreMetadata<StateT> {
     path: string,
@@ -19,7 +19,7 @@ export class ServiceStore<StateT extends object> {
     private logger: Logger;
 
     constructor(metadata: ServiceStoreMetadata<StateT>) {
-        this.logger = createLogger("ServiceStore(" + metadata.path + ")")
+        this.logger = Logger.create("ServiceStore", metadata.path);
         this.appStore = null;
         this.metadata = metadata;
         this.pathResolver = new PathResolver(this.metadata.path);

@@ -1,4 +1,5 @@
-import {enableLogging} from "./logger";
+import {Logger} from "./logger";
+
 export interface Config {
     enableLogging?: boolean;
     activityAutoBeginTransaction?: boolean;
@@ -13,7 +14,12 @@ export const config: Config = {
 
 export function configure(newConfig: Config) {
     if(newConfig.enableLogging != config.enableLogging) {
-        enableLogging(newConfig.enableLogging);
+        if(newConfig.enableLogging) {
+            Logger.root.enable();
+        }
+        else {
+            Logger.root.disable();
+        }
     }
 
     Object.assign(config, newConfig);

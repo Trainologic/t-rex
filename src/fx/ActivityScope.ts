@@ -1,4 +1,4 @@
-import {createLogger, Logger} from "./logger";
+import {Logger} from "./logger";
 import {AppStore} from "./AppStore";
 
 export class ActivityScope {
@@ -10,7 +10,7 @@ export class ActivityScope {
 
     constructor() {
         this.id = ++ActivityScope.nextActivityId;
-        this.logger = createLogger("ActivityScope(" + this.id + ")");
+        this.logger = Logger.create("ActivityScope", Logger.ID);
         this.outerZone = Zone.current;
 
         this.logger.log("created");

@@ -1,12 +1,12 @@
 import {TransactionScope} from "./TransactionScope";
 import {ServiceStore} from "./ServiceStore";
 import {AppStore} from "./AppStore";
-import {createLogger} from "./logger";
 import {IService} from "./Service";
 import {config} from "./config";
 import {ActivityScope} from "./ActivityScope";
+import {Logger} from "./logger";
 
-const logger = createLogger("decorators");
+const logger = Logger.create("decorators");
 
 const ACTIVITY_SERVICE = "t-rex:service";
 

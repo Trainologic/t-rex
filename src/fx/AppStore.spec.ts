@@ -1,6 +1,3 @@
-import {enableLogging} from "./logger";
-enableLogging(false);
-
 import {AppStore} from "./AppStore";
 import {ServiceStore} from "./ServiceStore";
 import {transaction} from "./decorators";

@@ -1,12 +1,10 @@
 import {ServiceStore} from "./ServiceStore";
 import {PathResolver} from "./PathResolver";
 import {ROOT} from "./TransactionalObject";
-import {createLogger} from "./logger";
 import {IService} from "./Service";
-import {transaction} from "./decorators";
-import {symlinkSync} from "fs";
+import {Logger} from "./logger";
 
-const logger = createLogger("AppStore");
+const logger = Logger.create("AppStore");
 
 export interface StoreListener<StateT> {
     (newState: StateT, oldState: StateT): void;

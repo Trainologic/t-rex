@@ -1,6 +1,6 @@
-import {createLogger} from "./logger";
+import {Logger} from "./logger";
 
-const logger = createLogger("operators");
+const logger = Logger.create("operators");
 
 export abstract class StoreOperator {
     abstract execute(data: any);
