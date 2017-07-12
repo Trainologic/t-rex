@@ -111,19 +111,6 @@ export class TransactionalObject<StateT> {
         return this.current;
     }
 
-    getProperty(root, path) {
-        if (path == ROOT) {
-            return root;
-        }
-
-        const parts = path.split(".");
-        for (let part of parts) {
-            root = root[part];
-        }
-
-        return root;
-    }
-
     setProperty(path, changes) {
         const pathEntries = this.getPath(this.current, path);
         const lastEntry = pathEntries[pathEntries.length-1];

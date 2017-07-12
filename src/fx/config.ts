@@ -8,8 +8,8 @@ export interface Config {
 
 export const config: Config = {
     enableLogging: false,
-    activityAutoBeginTransaction: true,
-    updateAutoBeginTransaction: false,
+    activityAutoBeginTransaction: false,
+    updateAutoBeginTransaction: true,
 };
 
 export function configure(newConfig: Config) {

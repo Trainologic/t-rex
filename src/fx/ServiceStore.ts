@@ -158,9 +158,10 @@ export class ServiceStore<StateT extends object> {
         let updated: StateT;
 
         if(config.updateAutoBeginTransaction) {
-            updated = TransactionScope.runInsideTransaction(this.appStore, ()=> {
-                return this.doUpdate(TransactionScope.current(), changes);
+            TransactionScope.runInsideTransaction(this.appStore, ()=> {
+                this.doUpdate(TransactionScope.current(), changes);
             });
+            updated = this.getState();
         }
         else {
             const tranScope = TransactionScope.current();
@@ -168,7 +169,8 @@ export class ServiceStore<StateT extends object> {
                 throw new Error("No ambient transaction to update");
             }
 
-            updated = this.doUpdate(TransactionScope.current(), changes);
+            this.doUpdate(TransactionScope.current(), changes);
+            updated = this.getState();
         }
 
         if(arguments.length == 2) {
@@ -198,8 +200,7 @@ export class ServiceStore<StateT extends object> {
         const oldState = this.getState();
         const resolvedChanges = this.resolveOperators(changes, oldState);
 
-        const newState = tranScope.update(this.metadata.path, resolvedChanges);
-        return newState;
+        tranScope.update(this.metadata.path, resolvedChanges);
     }
 
     static create<StateT extends object>(path: string, initialState: StateT) {

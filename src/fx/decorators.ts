@@ -115,7 +115,7 @@ export function Activity(options?: ActivityOptions) {
             let appStore = getAppStoreFromService(service);
             const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", config.activityAutoBeginTransaction);
 
-            return ActivityScope.runInsideActivity(appStore, ()=> {
+            return ActivityScope.runInsideActivity(appStore, service.constructor.name + ":" + propertyKey, ()=> {
                 if(beginTransaction) {
                     return TransactionScope.runInsideTransaction(appStore, function () {
                         return method.apply(service, args);

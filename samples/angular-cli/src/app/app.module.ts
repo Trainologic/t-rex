@@ -38,5 +38,6 @@ configure({
 })
 export class AppModule {
   constructor(rootService: RootService) {
+    rootService.init();
   }
 }

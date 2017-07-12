@@ -5,7 +5,7 @@ configure({
     //activityAutoBeginTransaction: false,
 });
 
-import {ActivityListener, AppStore} from "./AppStore";
+import {ActivityListener, AppStore, StoreListener} from "./AppStore";
 import {ServiceStore} from "./ServiceStore";
 import {Activity, transaction} from "./decorators";
 import {collectValues} from "../spec/collectValues";
@@ -75,16 +75,36 @@ describe("ActivityScope", function() {
         }
     }
 
-    class Listener {
+    class Listener implements ActivityListener{
+        begin: number = 0;
         success: number = 0;
         error: number = 0;
+        complete: number = 0;
+        asyncComplete: number = 0;
+        zoneComplete: number = 0;
 
-        onActivitySuccess(res) {
+        onActivityBegin(activity) {
+            ++this.begin;
+        }
+
+        onActivitySuccess(activity, res) {
             ++this.success;
         }
 
-        onActivityError(res) {
+        onActivityError(activity, res) {
             ++this.error;
+        }
+
+        onActivitySyncComplete(activity) {
+            ++this.complete;
+        }
+
+        onActivityAsyncComplete(activity) {
+            ++this.asyncComplete;
+        }
+
+        onActivityZoneComplete(activity) {
+            ++this.zoneComplete;
         }
     }
 

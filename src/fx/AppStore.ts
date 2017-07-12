@@ -3,6 +3,7 @@ import {PathResolver} from "./PathResolver";
 import {ROOT} from "./TransactionalObject";
 import {IService} from "./Service";
 import {Logger} from "./logger";
+import {ActivityScope} from "./ActivityScope";
 
 const logger = Logger.create("AppStore");
 
@@ -163,10 +164,10 @@ export class AppStore<StateT extends object> {
 
         if(store.getMetadata().path == ROOT) {
             this.appState = store.getMetadata().initialState;
-            return;
         }
-
-        PathResolver.create(metadata.path).set(this.appState, metadata.initialState);
+        else {
+            PathResolver.create(metadata.path).set(this.appState, metadata.initialState);
+        }
 
         store.onRegistered(this);
     }
@@ -202,21 +203,36 @@ export class AppStore<StateT extends object> {
         }
     }
 
-    _onActivityError(err) {
-        logger.log("onActivityError", err);
-
-        this.emitActivityEvent(l=>l.onActivityError(err));
+    _onActivityBegin(activity: ActivityScope) {
+        this.emitActivityEvent(l=>l.onActivityBegin(activity));
     }
 
-    _onActivitySuccess(res) {
-        logger.log("onActivitySuccess", res);
-
-        this.emitActivityEvent(l=>l.onActivitySuccess(res));
+    _onActivityError(activity: ActivityScope, err) {
+        this.emitActivityEvent(l=>l.onActivityError(activity, err));
     }
 
+    _onActivitySuccess(activity: ActivityScope, res) {
+        this.emitActivityEvent(l=>l.onActivitySuccess(activity, res));
+    }
+
+    _onActivitySyncComplete(activity: ActivityScope) {
+        this.emitActivityEvent(l=>l.onActivitySyncComplete(activity));
+    }
+
+    _onActivityAsyncComplete(activity: ActivityScope) {
+        this.emitActivityEvent(l=>l.onActivityAsyncComplete(activity));
+    }
+
+    _onActivityZoneComplete(activity: ActivityScope) {
+        this.emitActivityEvent(l=>l.onActivityZoneComplete(activity));
+    }
 }
 
 export interface ActivityListener {
-    onActivitySuccess(res: any);
-    onActivityError(err: any);
+    onActivityBegin(activity: ActivityScope);
+    onActivitySuccess(activity: ActivityScope, res: any);
+    onActivityError(activity: ActivityScope, err: any);
+    onActivitySyncComplete(activity: ActivityScope);
+    onActivityAsyncComplete(activity: ActivityScope);
+    onActivityZoneComplete(activity: ActivityScope);
 }

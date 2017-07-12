@@ -12,4 +12,8 @@ export class ContactListComponent {
   get contacts() {
     return this.contactService.state.filtered;
   }
+
+  refresh() {
+    return this.contactService.refresh();
+  }
 }

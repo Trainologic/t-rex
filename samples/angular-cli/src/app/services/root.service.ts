@@ -19,4 +19,8 @@ export class RootService {
   addContact(name: string) {
     this.contactService.add(name);
   }
+
+  async init() {
+    await this.contactService.init();
+  }
 }

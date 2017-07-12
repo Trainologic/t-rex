@@ -1,6 +1,7 @@
 import {AppStore} from "./AppStore";
 import {TransactionalObject} from "./TransactionalObject";
 import {Logger} from "./logger";
+import {ActivityScope} from "./ActivityScope";
 
 if(typeof Zone === "undefined") {
     throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
@@ -20,7 +21,7 @@ export class TransactionScope {
 
     constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
-        this.logger = Logger.create("TransactionScope", `(${this.id})`);
+        this.logger = Logger.create("TransactionScope").WithId(this.id);
         this.updateCount = 0;
         this.appStore = appStore;
         this.oldState = appStore.getState();
@@ -44,8 +45,6 @@ export class TransactionScope {
         else {
             this.logger.log("No effective changes");
         }
-
-        return newState;
     }
 
     public getNewState() {
@@ -82,6 +81,11 @@ export class TransactionScope {
         this.appStore.executeReactions();
 
         this.appStore.commit(oldState, newState);
+
+        const activity = ActivityScope.current();
+        if(activity) {
+            activity.onTransactionCommitted();
+        }
 
         this.committed = true;
 

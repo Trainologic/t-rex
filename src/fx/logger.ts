@@ -1,20 +1,22 @@
-const all: {[key: string]: Logger[]} = {};
-let enabled: boolean = true;
-
 export class Logger {
     private _parent: Logger;
     private _name: string;
+    private _id: number|undefined;
     private _enabled: boolean|null;
     private _prefix: string;
     private _loggers: Logger[];
     private _nextId: number;
 
-    public static root: Logger = new Logger(null, "");
-    public static ID = "$$ComponentLoggerID";
+    public static root: Logger = new Logger(null, "", undefined);
 
-    constructor(parent: Logger, name: string|null) {
+    constructor(parent: Logger, name?: string, id?: number) {
+        if(name===undefined && id===undefined) {
+            throw new Error("Logger name or id must be defined");
+        }
+
         this._parent = parent;
         this._name = name;
+        this._id = id;
         this._enabled = null;
         this._prefix = this.buildPrefix();
         this._loggers = [];
@@ -71,7 +73,8 @@ export class Logger {
 
     private buildPrefix() {
         const parentPrefix = this._parent ? this._parent.buildPrefix() : "";
-        const prefix = parentPrefix + " " + this._name;
+
+        const prefix = parentPrefix + (this._id!==undefined ? `(${this._id})` : ` ${this._name}`);
         return prefix;
     }
 
@@ -101,13 +104,35 @@ export class Logger {
         return null;
     }
 
-    private createChild(name: string) {
-        const logger = (name==Logger.ID ? new Logger(this, `(${this._nextId++})`) : new Logger(this, name));
+    createChild(name: string) {
+        const logger = new Logger(this, name, undefined);
         this._loggers.push(logger);
         return logger;
     }
 
+    WithId(id?: number) {
+        if(id === undefined) {
+            id = this._nextId++;
+        }
+
+        const logger = new Logger(this, undefined, id);
+
+        this._loggers.push(logger);
+
+        return logger;
+    }
+
     static create(... names: string[]) {
+        let parent = this.root;
+
+        for(let name of names) {
+            parent = parent.findChild(name) || parent.createChild(name);
+        }
+
+        return parent;
+    }
+
+    static createWithId(... names: string[]) {
         let parent = this.root;
 
         for(let name of names) {

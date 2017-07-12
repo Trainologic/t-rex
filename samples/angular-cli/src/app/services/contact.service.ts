@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import {ServiceStore, Activity, push, dec, transaction} from "t-rex";
 import {Reaction} from "t-rex";
 import {contains} from "../common/stringHelpers";
+import {Http} from "@angular/http";
+import "rxjs/add/operator/toPromise";
 
 export interface Contact {
     id: number;
@@ -27,7 +29,7 @@ export class ContactService {
     nextId: -1,
   });
 
-  constructor() {
+  constructor(private http: Http) {
   }
 
   get state() {
@@ -35,6 +37,10 @@ export class ContactService {
   }
 
   @Activity()
+  async init() {
+    await this.refresh();
+  }
+
   filter(filter: string) {
     this.store.update({
       filter: filter
@@ -42,17 +48,21 @@ export class ContactService {
   }
 
   @Activity()
-  add(name: string) {
+  async add(name: string) {
     if(!name) {
       throw new Error("Name must be non empty");
     }
 
-    transaction(this.store, ()=> {
+    await delay(1000);
+
+    return transaction(this.store, ()=> {
       const contact = {id: this.generateId(), name: name};
 
       this.store.update({
         all: push(contact)
       });
+
+      return contact;
     });
   }
 
@@ -66,5 +76,24 @@ export class ContactService {
   private generateId(): number {
     return this.store.update("nextId", dec());
   }
+
+  @Activity()
+  async refresh() {
+    const res = await this.http.get("/assets/contacts.json").toPromise();
+    const contacts = res.json();
+
+    this.store.update({
+      all: contacts
+    });
+
+    return contacts;
+  }
 }
 
+function delay(ms) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve();
+    }, ms);
+  });
+}
