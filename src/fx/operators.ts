@@ -1,6 +1,6 @@
-import {Logger} from "./logger";
+import {appLogger} from "./logger";
 
-const logger = Logger.create("operators");
+const logger = appLogger.create("operators");
 
 export abstract class StoreOperator {
     abstract execute(data: any);
@@ -12,7 +12,7 @@ export class PushOperator extends StoreOperator {
     }
 
     execute(data: any): any {
-        logger.log("PushOperator.execute", data, this.item);
+        logger("PushOperator.execute", data, this.item).log();
 
         const newData = data.concat([]);
         newData.push(this.item);
@@ -23,7 +23,7 @@ export class PushOperator extends StoreOperator {
 
 export class IncrementOperator extends StoreOperator {
     execute(data: any): any {
-        logger.log("IncrementOperator.execute", data);
+        logger("IncrementOperator.execute", data).log();
 
         return data + 1;
     }
@@ -31,7 +31,7 @@ export class IncrementOperator extends StoreOperator {
 
 export class DecrementOperator extends StoreOperator {
     execute(data: any): any {
-        logger.log("DecrementOperator.execute", data);
+        logger("DecrementOperator.execute", data).log();
 
         return data - 1;
     }

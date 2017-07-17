@@ -2,10 +2,10 @@ import {ServiceStore} from "./ServiceStore";
 import {PathResolver} from "./PathResolver";
 import {ROOT} from "./TransactionalObject";
 import {IService} from "./Service";
-import {Logger} from "./logger";
 import {ActivityScope} from "./ActivityScope";
+import {appLogger} from "./logger";
 
-const logger = Logger.create("AppStore");
+const logger = appLogger.create("AppStore");
 
 export interface StoreListener<StateT> {
     (newState: StateT, oldState: StateT): void;
@@ -43,7 +43,7 @@ export class AppStore<StateT extends object> {
     }
 
     init(services: IService<any>[]) {
-        logger.log("BEGIN - init");
+        logger("BEGIN - init").log();
 
         for(let service of services) {
             this.registerStore(service.store);
@@ -59,19 +59,19 @@ export class AppStore<StateT extends object> {
 
         this.services = services;
 
-        logger.log("Registered services are", this.services);
+        logger("Registered services are", this.services).log();
 
         systemStore.update({
             initialized: true,
         });
 
-        logger.log("Initial appState", this.appState);
+        logger("Initial appState", this.appState).log();
 
-        logger.log("END - init");
+        logger("END - init").log();
     }
 
     executeReactions() {
-        logger.log("BEGIN - executeReactions");
+        logger("BEGIN - executeReactions").log();
 
         for (let service of this.services) {
             const reactions = Reflect.get(service.constructor, "reactions");
@@ -79,15 +79,15 @@ export class AppStore<StateT extends object> {
                 for (let reaction of reactions) {
                     const method = service[reaction];
                     if (method) {
-                        logger.log("BEGIN - " + service.constructor.name + "." + reaction);
+                        logger("BEGIN - " + service.constructor.name + "." + reaction).log();
                         method.call(service);
-                        logger.log("END - " + service.constructor.name + "." + reaction);
+                        logger("END - " + service.constructor.name + "." + reaction).log();
                     }
                 }
             }
         }
 
-        logger.log("END - executeReactions");
+        logger("END - executeReactions").log();
     }
 
     private extractStore(serviceOrStore: ServiceOrStore): ServiceStore<any> {
@@ -123,7 +123,7 @@ export class AppStore<StateT extends object> {
 
     commit(oldState, newState) {
         if(newState == this.appState) {
-            logger.log("Nothing new to commit");
+            logger("Nothing new to commit").log();
             return;
         }
 
@@ -131,7 +131,7 @@ export class AppStore<StateT extends object> {
             throw new Error("Concurrency error");
         }
 
-        logger.log("Changing state", oldState, " ==> ", newState);
+        logger("Changing state", oldState, " ==> ", newState).log();
 
         this.appState = newState;
 
@@ -148,7 +148,7 @@ export class AppStore<StateT extends object> {
                 l(this.appState, oldState);
             }
             catch (err) {
-                logger.error("Ignoring error during AppStore change event", err);
+                logger("Ignoring error during AppStore change event", err).error();
             }
         }
     }

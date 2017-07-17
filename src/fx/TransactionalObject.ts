@@ -1,9 +1,10 @@
-import {Logger} from "./logger";
+import {appLogger} from "./logger";
+
 export const ROOT = "/";
 export const $$MODIFIED = "$$t-rex:modified";
 export const $$VERSION = "$$t-rex:version";
 
-const logger = Logger.create("TransactionalObject");
+const logger = appLogger.create("TransactionalObject");
 
 export class TransactionalObject<StateT> {
     base: StateT;
@@ -18,7 +19,7 @@ export class TransactionalObject<StateT> {
     }
 
     commit() {
-        logger.log("commit");
+        logger("commit").log();
 
         for(var obj of this.modified) {
             delete obj[$$MODIFIED];
@@ -29,7 +30,7 @@ export class TransactionalObject<StateT> {
     }
 
     rebase(newBase) {
-        logger.log("rebase");
+        logger("rebase").log();
 
         this.current = this.internalRebase(this.current, this.base, newBase, "/");
         this.base = newBase;
@@ -74,7 +75,7 @@ export class TransactionalObject<StateT> {
                 //
                 if(base[field] != newBase[field]) {
                     const fieldPath = this.appendPath(path, field);
-                    logger.error("Concurrency error at path \"" + fieldPath + "\".", "base is", base[field], "while latest is", newBase[field]);
+                    logger("Concurrency error at path \"" + fieldPath + "\".", "base is", base[field], "while latest is", newBase[field]).error();
                     throw new Error("Concurrency error at " + fieldPath);
                 }
             }

@@ -18,6 +18,7 @@
     "@types/jasmine": "^2.5.52",
     "@types/node": "^8.0.0",
     "build-utils": "^1.0.52",
+    "complog": "^1.0.9",
     "jasmine": "^2.6.0",
     "object.values": "^1.0.4",
     "rollup": "^0.43.0",

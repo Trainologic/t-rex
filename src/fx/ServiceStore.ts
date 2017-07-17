@@ -4,7 +4,8 @@ import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
 import {config} from "./config";
 import {StoreOperator} from "./operators";
-import {Logger} from "./logger";
+import {appLogger} from "./logger";
+import {ILogger} from "complog/logger";
 
 export interface ServiceStoreMetadata<StateT> {
     path: string,
@@ -16,10 +17,10 @@ export class ServiceStore<StateT extends object> {
     private listeners: StoreListener<StateT>[];
     private metadata: ServiceStoreMetadata<StateT>;
     private pathResolver: PathResolver;
-    private logger: Logger;
+    private logger: ILogger;
 
     constructor(metadata: ServiceStoreMetadata<StateT>) {
-        this.logger = Logger.create("ServiceStore", metadata.path);
+        this.logger = appLogger.create("ServiceStore").create(metadata.path);
         this.appStore = null;
         this.metadata = metadata;
         this.pathResolver = new PathResolver(this.metadata.path);
@@ -27,7 +28,7 @@ export class ServiceStore<StateT extends object> {
     }
 
     runWithOwnAppStore() {
-        this.logger.log("runWithOwnAppStore");
+        this.logger("runWithOwnAppStore").log();
 
         const appStore = new AppStore<any>();
         appStore.init([
@@ -151,7 +152,7 @@ export class ServiceStore<StateT extends object> {
     update<K extends keyof StateT>(key: K, value: StateT[K]): StateT[K]
     update(key: any, value?: any): any {
         const changes = this.resolveUpdateOverloading.apply(this, arguments);
-        this.logger.log("update", changes);
+        this.logger("update", changes).log();
 
         this.ensureInitialized();
 
@@ -216,7 +217,7 @@ export class ServiceStore<StateT extends object> {
                 l(newState, oldState);
             }
             catch(err) {
-                this.logger.error("Ignoring error during ServiceStore change event", err);
+                this.logger("Ignoring error during ServiceStore change event", err).error();
             }
         }
     }

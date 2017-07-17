@@ -4,9 +4,9 @@ import {AppStore} from "./AppStore";
 import {IService} from "./Service";
 import {config} from "./config";
 import {ActivityScope} from "./ActivityScope";
-import {Logger} from "./logger";
+import {appLogger} from "./logger";
 
-const logger = Logger.create("decorators");
+const logger = appLogger.create("decorators");
 
 const ACTIVITY_SERVICE = "t-rex:service";
 
@@ -25,7 +25,7 @@ export interface ActivityOptions {
 function getStoreFromService(service: IService<any>) {
     let store = service.store;
     if(!store) {
-        logger.error("No store field was found for store instance", service);
+        logger("No store field was found for store instance", service).error();
         throw new Error("No store field was found for store instance");
     }
 
@@ -83,12 +83,12 @@ export interface ServiceOptions {
 
 export function Service(options: ServiceOptions) {
     return function(target: any) {
-        logger.log(target);
+        logger(target).log();
 
         Reflect.set(target, ACTIVITY_SERVICE, {});
 
         const res = Reflect.get(target, ACTIVITY_SERVICE);
-        logger.log("RES", res);
+        logger("RES", res).log();
         return target;
     }
 }
@@ -136,7 +136,7 @@ export function Reaction() {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const ctor = target.constructor;
         if(!ctor) {
-            logger.warn("Target of @Reaction has no constructor")
+            logger("Target of @Reaction has no constructor").warn();
             return;
         }
 

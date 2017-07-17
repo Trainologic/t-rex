@@ -1,12 +1,13 @@
-import {Logger} from "./logger";
 import {AppStore} from "./AppStore";
+import {appLogger} from "./logger";
+import {ILogger} from "complog/logger";
 
 const COUNTERS = ["XMLHttpRequest.send", "setTimeout", "setInterval"];
 
 export class ActivityScope {
     private outerZone: Zone;
     private id: number;
-    private logger: Logger;
+    private logger: ILogger;
     private counters: {[name: string]: number};
     private startTime: Date;
     private endTime: Date;
@@ -19,7 +20,7 @@ export class ActivityScope {
 
     constructor(private appStore, private name) {
         this.id = ++ActivityScope.nextActivityId;
-        this.logger = Logger.create("ActivityScope").WithId();
+        this.logger = appLogger.create("ActivityScope").create(this.id);
         this.outerZone = Zone.current;
         this.counters = {};
         this.trans = 0;
@@ -131,7 +132,7 @@ export class ActivityScope {
     }
 
     onBegin() {
-        this.logger.log("onBegin", this.name);
+        this.logger("onBegin", this.name).log;
 
         this.startTime = new Date();
 
@@ -139,20 +140,20 @@ export class ActivityScope {
     }
 
     onSuccess(res) {
-        this.logger.log("onSuccess", this.name, res);
+        this.logger("onSuccess", this.name, res).log();
 
         this.result = res;
         this.appStore._onActivitySuccess(this, res);
     }
 
     onError(err) {
-        this.logger.log("onError", err);
+        this.logger("onError", err).log();
 
         this.appStore._onActivityError(this, err);
     }
 
     onSyncComplete() {
-        this.logger.log("onComplete", this.name, this.getStats());
+        this.logger("onComplete", this.name, this.getStats()).log();
 
         this.endTime = new Date();
 
@@ -160,7 +161,7 @@ export class ActivityScope {
     }
 
     onAsyncComplete() {
-        this.logger.log("onAsyncComplete", this.name, this.getStats());
+        this.logger("onAsyncComplete", this.name, this.getStats()).log();
 
         this.endTimeAsync = new Date();
 
@@ -174,7 +175,7 @@ export class ActivityScope {
 
         this.endTimeZone = new Date();
 
-        this.logger.log("onZoneComplete", this.name, this.getStats());
+        this.logger("onZoneComplete", this.name, this.getStats()).log();
 
         this.appStore._onActivityZoneComplete(this);
     }
