@@ -1,3 +1,3 @@
-import {forArea} from "complog";
+import {forArea, ILoggerArea} from "complog";
 
-export const appLogger = forArea("t-rex");
+export const appLogger: ILoggerArea = forArea("t-rex");

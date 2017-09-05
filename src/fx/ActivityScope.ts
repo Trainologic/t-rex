@@ -1,13 +1,14 @@
 import {AppStore} from "./AppStore";
+import {Logger} from "complog/logger";
 import {appLogger} from "./logger";
-import {ILogger} from "complog/logger";
 
 const COUNTERS = ["XMLHttpRequest.send", "setTimeout", "setInterval"];
+
+const logger = appLogger.create("ActivityScope");
 
 export class ActivityScope {
     private outerZone: Zone;
     private id: number;
-    private logger: ILogger;
     private counters: {[name: string]: number};
     private startTime: Date;
     private endTime: Date;
@@ -18,9 +19,8 @@ export class ActivityScope {
 
     private static nextActivityId = 0;
 
-    constructor(private appStore, private name) {
+    constructor(private appStore: AppStore<any>, private name) {
         this.id = ++ActivityScope.nextActivityId;
-        this.logger = appLogger.create("ActivityScope").create(this.id);
         this.outerZone = Zone.current;
         this.counters = {};
         this.trans = 0;
@@ -32,6 +32,8 @@ export class ActivityScope {
     }
 
     static runInsideActivity<StateT>(appStore: AppStore<any>, name, action) {
+        logger("runInsideActivity", name).log();
+
         function runAction(func, isRoot: boolean, activity: ActivityScope) {
             let retVal;
 
@@ -72,6 +74,8 @@ export class ActivityScope {
 
         let activity: ActivityScope = ActivityScope.current();
         if(activity) {
+            logger("Nested activity. Parent is", activity).log();
+
             //
             //  This is a nested activity
             //  No need to catch errors
@@ -108,7 +112,9 @@ export class ActivityScope {
         return zone.run(function () {
             activity.onBegin();
 
-            return runAction(action, true, activity);
+            return activity.run(function() {
+                return runAction(action, true, activity);
+            });
         });
     }
 
@@ -132,28 +138,32 @@ export class ActivityScope {
     }
 
     onBegin() {
-        this.logger("onBegin", this.name).log;
+        logger("onBegin", this.name).log();
 
         this.startTime = new Date();
 
         this.appStore._onActivityBegin(this);
     }
 
+    run(func: () => any) {
+        return this.appStore._runActivity(this, func);
+    }
+
     onSuccess(res) {
-        this.logger("onSuccess", this.name, res).log();
+        logger("onSuccess", this.name, res).log();
 
         this.result = res;
         this.appStore._onActivitySuccess(this, res);
     }
 
     onError(err) {
-        this.logger("onError", err).log();
+        logger("onError", err).log();
 
         this.appStore._onActivityError(this, err);
     }
 
     onSyncComplete() {
-        this.logger("onComplete", this.name, this.getStats()).log();
+        logger("onComplete", this.name, this.getStats()).log();
 
         this.endTime = new Date();
 
@@ -161,7 +171,7 @@ export class ActivityScope {
     }
 
     onAsyncComplete() {
-        this.logger("onAsyncComplete", this.name, this.getStats()).log();
+        logger("onAsyncComplete", this.name, this.getStats()).log();
 
         this.endTimeAsync = new Date();
 
@@ -175,7 +185,7 @@ export class ActivityScope {
 
         this.endTimeZone = new Date();
 
-        this.logger("onZoneComplete", this.name, this.getStats()).log();
+        logger("onZoneComplete", this.name, this.getStats()).log();
 
         this.appStore._onActivityZoneComplete(this);
     }

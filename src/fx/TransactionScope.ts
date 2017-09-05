@@ -2,11 +2,12 @@ import {AppStore} from "./AppStore";
 import {TransactionalObject} from "./TransactionalObject";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
-import {ILogger} from "complog/logger";
 
 if(typeof Zone === "undefined") {
     throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
 }
+
+const logger = appLogger.create("TransactionScope");
 
 export class TransactionScope {
     private appStore: AppStore<any>;
@@ -14,7 +15,6 @@ export class TransactionScope {
     private committed: boolean;
     private outerZone: Zone;
     private id: number;
-    private logger: ILogger;
     private updateCount: number;
     private oldState: any;
 
@@ -22,7 +22,6 @@ export class TransactionScope {
 
     constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
-        this.logger = appLogger.create("TransactionScope").create(this.id);
         this.updateCount = 0;
         this.appStore = appStore;
         this.oldState = appStore.getState();
@@ -30,21 +29,21 @@ export class TransactionScope {
         this.committed = false;
         this.outerZone = Zone.current;
 
-        this.logger("created", this.oldState).log();
+        logger("created", this.oldState).log();
     }
 
     public update(path: string, changes: any) {
-        this.logger(`update(${++this.updateCount})`, path, changes).log();
+        logger(`update(${++this.updateCount})`, path, changes).log();
 
         this.ensureNotCommitted();
 
         const newState = this.tranState.setProperty(path, changes);
 
         if(newState != this.oldState) {
-            this.logger("newState", newState).log();
+            logger("newState", newState).log();
         }
         else {
-            this.logger("No effective changes").log();
+            logger("No effective changes").log();
         }
     }
 
@@ -64,7 +63,7 @@ export class TransactionScope {
         const currentState = this.appStore.getState();
 
         if(newState == currentState) {
-            this.logger("Nothing new to commit. updateCount is", this.updateCount).log();
+            logger("Nothing new to commit. updateCount is", this.updateCount).log();
             return;
         }
 
@@ -105,7 +104,7 @@ export class TransactionScope {
         //
         this.tranState.commit();
 
-        this.logger("committed").log();
+        logger("committed").log();
     }
 
     static current(): TransactionScope {

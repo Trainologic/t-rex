@@ -23,6 +23,14 @@ export class SystemState {
     nextActivityId: number;
 }
 
+export interface StoreMiddleware {
+    (activity: ActivityScope, next: StoreMiddlewareNext): any;
+}
+
+export interface StoreMiddlewareNext {
+    (activity: ActivityScope): any;
+}
+
 //
 //  Holds application base and allow subscribing to changes
 //  Each ServiceStore register itself to it
@@ -34,12 +42,16 @@ export class AppStore<StateT extends object> {
     private stores: ServiceStore<any>[];
     private services: IService<any>[];
     private activityListeners: ActivityListener[] = [];
+    private middleware: StoreMiddleware;
+    private middlewareNext: StoreMiddlewareNext;
 
     constructor() {
         this.appState = <any>{};
         this.listeners = [];
         this.stores = [];
         this.services = [];
+        this.middleware = null;
+        this.middlewareNext = null;
     }
 
     init(services: IService<any>[]) {
@@ -197,34 +209,56 @@ export class AppStore<StateT extends object> {
         }
     }
 
-    private emitActivityEvent(func: (l:ActivityListener)=>void) {
+    registerMiddleware(middleware: (activity, next)=>any) {
+        const oldMiddleware = this.middleware;
+        const oldMiddlewareNext = this.middlewareNext;
+        this.middlewareNext = function(activity: ActivityScope) {
+            if(oldMiddleware) {
+                return oldMiddleware(activity, oldMiddlewareNext);
+            }
+        }
+
+        this.middleware = middleware;
+    }
+
+    private emitActivityEvent(func: (l:ActivityListener)=>void, activity: ActivityScope) {
+        logger("emitActivityEvent", activity).log();
+
         for(let listener of this.activityListeners) {
             func(listener);
         }
     }
 
     _onActivityBegin(activity: ActivityScope) {
-        this.emitActivityEvent(l=>l.onActivityBegin(activity));
+        this.emitActivityEvent(l=>l.onActivityBegin(activity), activity);
+    }
+
+    _runActivity(activity: ActivityScope, func: () => any) {
+        if(this.middleware) {
+            return this.middleware(activity, func)
+        }
+
+        return func();
     }
 
     _onActivityError(activity: ActivityScope, err) {
-        this.emitActivityEvent(l=>l.onActivityError(activity, err));
+        this.emitActivityEvent(l=>l.onActivityError(activity, err), activity);
     }
 
     _onActivitySuccess(activity: ActivityScope, res) {
-        this.emitActivityEvent(l=>l.onActivitySuccess(activity, res));
+        this.emitActivityEvent(l=>l.onActivitySuccess(activity, res), activity);
     }
 
     _onActivitySyncComplete(activity: ActivityScope) {
-        this.emitActivityEvent(l=>l.onActivitySyncComplete(activity));
+        this.emitActivityEvent(l=>l.onActivitySyncComplete(activity), activity);
     }
 
     _onActivityAsyncComplete(activity: ActivityScope) {
-        this.emitActivityEvent(l=>l.onActivityAsyncComplete(activity));
+        this.emitActivityEvent(l=>l.onActivityAsyncComplete(activity), activity);
     }
 
     _onActivityZoneComplete(activity: ActivityScope) {
-        this.emitActivityEvent(l=>l.onActivityZoneComplete(activity));
+        this.emitActivityEvent(l=>l.onActivityZoneComplete(activity), activity);
     }
 }
 
