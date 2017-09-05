@@ -2,7 +2,6 @@ import {AppStore, StoreListener, StoreSubscription} from "./AppStore";
 import {TransactionScope} from "./TransactionScope";
 import {P1, P2} from "./helpers";
 import {PathResolver} from "./PathResolver";
-import {config} from "./config";
 import {StoreOperator} from "./operators";
 import {appLogger} from "./logger";
 
@@ -121,7 +120,7 @@ export class ServiceStore<StateT extends object> {
     getState(): Readonly<StateT> {
         this.ensureInitialized();
 
-        const tranScope = TransactionScope.current();
+        const tranScope = TransactionScope.current;
         const appState = (tranScope ? tranScope.getNewState() : this.appStore.getState());
         const state = this.pathResolver.get(appState);
         return state;
@@ -157,19 +156,19 @@ export class ServiceStore<StateT extends object> {
 
         let updated: StateT;
 
-        if(config.updateAutoBeginTransaction) {
+        if(this.appStore.config.updateAutoBeginTransaction) {
             TransactionScope.runInsideTransaction(this.appStore, ()=> {
-                this.doUpdate(TransactionScope.current(), changes);
+                this.doUpdate(TransactionScope.current, changes);
             });
             updated = this.getState();
         }
         else {
-            const tranScope = TransactionScope.current();
+            const tranScope = TransactionScope.current;
             if (!tranScope) {
                 throw new Error("No ambient transaction to update");
             }
 
-            this.doUpdate(TransactionScope.current(), changes);
+            this.doUpdate(TransactionScope.current, changes);
             updated = this.getState();
         }
 

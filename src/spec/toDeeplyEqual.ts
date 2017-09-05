@@ -18,7 +18,7 @@ export function toDeeplyEqual(util, customEqualityTesters) {
 
 function run(actual, expected) {
     for (let key of Object.keys(actual)) {
-        if (key.startsWith("$$t-rex")) {
+        if (key.startsWith("$$t-rex") || key.startsWith("$$system")) {
             continue;
         }
 
@@ -28,7 +28,7 @@ function run(actual, expected) {
     }
 
     for (let key of Object.keys(expected)) {
-        if (key.startsWith("$$t-rex")) {
+        if (key.startsWith("$$t-rex") || key.startsWith("$$system")) {
             continue;
         }
 
@@ -38,7 +38,7 @@ function run(actual, expected) {
     }
 
     for (let key in Object.keys(expected)) {
-        if (key.startsWith("$$t-rex")) {
+        if (key.startsWith("$$t-rex") || key.startsWith("$$system")) {
             continue;
         }
 

@@ -1,10 +1,3 @@
-import {configure} from "./config";
-
-configure({
-    enableLogging: false,
-    //activityAutoBeginTransaction: false,
-});
-
 import {AppStore} from "./AppStore";
 import {ServiceStore} from "./ServiceStore";
 import {Activity, transaction} from "./decorators";
@@ -31,15 +24,17 @@ describe("ServiceStore", function() {
         }
 
         @Activity()
-        async incAndFail() {
-            this.counterStore.inc();
-            throw new Error("Ooops");
+        incAndFail() {
+            transaction(this.store, ()=> {
+                this.counterStore.inc();
+                throw new Error("Ooops");
+            });
         }
 
         @Activity()
-        async incAndLogin(userName: string) {
+        incAndLogin(userName: string) {
             this.counterStore.inc();
-            await this.authStore.login(userName);
+            this.authStore.login(userName);
         }
     }
 
@@ -91,11 +86,14 @@ describe("ServiceStore", function() {
 
         @Activity()
         loginAndRunCallback(userName: string, callback) {
-            this.store.update({
-                userName: userName,
+            transaction(this.store, ()=> {
+                this.store.update({
+                    userName: userName,
+                });
+
+                callback();
             });
 
-            callback();
             //setTimeout(callback, 100);
         }
 
@@ -138,15 +136,13 @@ describe("ServiceStore", function() {
         ]);
     });
 
-    it("with @Activity automatically commits changes to appStore", async function(done) {
-        await counterService.inc();
+    it("with @Activity automatically commits changes to appStore", function() {
+        counterService.inc();
         expect(rootService.state.counters.value).toBe(1);
-
-        done();
     });
 
-    it("Supports nested trasactions", async function(done) {
-        await rootService.incAndLogin("Ori");
+    it("Supports nested trasactions", function() {
+        rootService.incAndLogin("Ori");
 
         expect(rootService.state).toDeeplyEqual({
             counters: {
@@ -157,14 +153,12 @@ describe("ServiceStore", function() {
                 roles: [],
             }
         });
-
-        done();
     });
 
-    it("No commit in case of exception", async function(done) {
+    it("No commit in case of exception", function() {
         const beforeState = collectValues(rootService.state);
         try {
-            await rootService.incAndFail();
+            rootService.incAndFail();
         }
         catch(err) {
         }
@@ -172,13 +166,14 @@ describe("ServiceStore", function() {
 
         expect(afterState).toBeEqualArray(beforeState);
 
-        done();
+        console.log(beforeState);
+        console.log(afterState);
     });
 
     it("Does not allow second commit", async function(done) {
         let tranScope;
         await authService.loginAndRunCallback("userName", function() {
-            tranScope = TransactionScope.current();
+            tranScope = TransactionScope.current;
         });
 
         expect(() => {
@@ -217,59 +212,68 @@ describe("ServiceStore", function() {
         done();
     });
 
-    it("raises concurrency error when an array is modified by two parallel activities", async function (done) {
-        interface AppState {
-            nums: number[];
-        }
-
-        function delay(ms) {
-            return new Promise((resolve, reject)=> {
-                setTimeout(function() {
-                    resolve();
-                }, ms);
-            });
-        }
-
-        class Service1 {
-            store = ServiceStore.create<AppState>("/", {
-                nums: [],
-            });
-
-            get state() {
-                return this.store.getState();
-            }
-
-            @Activity()
-            async run() {
-                await delay(0);
-
-                await this.store.update({
-                    nums: this.state.nums.concat([1])
-                })
-            }
-        }
-
-        const appStore = new AppStore<AppState>();
-        const service1 = new Service1();
-        appStore.init([
-            service1
-        ]);
-
-        let thrown = false;
-        try {
-            await Promise.all([
-                service1.run(),
-                service1.run()
-            ]);
-        }
-        catch(err) {
-            thrown = true;
-        }
-
-        expect(thrown).toEqual(true);
-
-        done();
-    });
+    //
+    //  Disable for now. Consider reenable
+    //  Since TransactionScope is no more async there is no way to produce concurrency errors
+    //  Consider moving the concurrency checks to ActivityScope
+    //
+    // it("raises concurrency error when an array is modified by two parallel activities", async function (done) {
+    //     interface AppState {
+    //         nums: number[];
+    //     }
+    //
+    //     function delay(ms) {
+    //         return new Promise((resolve, reject)=> {
+    //             setTimeout(function() {
+    //                 resolve();
+    //             }, ms);
+    //         });
+    //     }
+    //
+    //     class Service1 {
+    //         store = ServiceStore.create<AppState>("/", {
+    //             nums: [],
+    //         });
+    //
+    //         get state() {
+    //             return this.store.getState();
+    //         }
+    //
+    //         @Activity()
+    //         async run() {
+    //             await delay(0);
+    //
+    //             this.store.update({
+    //                 nums: this.state.nums.concat([1])
+    //             })
+    //         }
+    //     }
+    //
+    //     const appStore = new AppStore<AppState>();
+    //     appStore.configure({
+    //         allowConcurrencyErrors: false
+    //     });
+    //
+    //     const service1 = new Service1();
+    //     appStore.init([
+    //         service1
+    //     ]);
+    //
+    //     let thrown = false;
+    //     try {
+    //         await Promise.all([
+    //             service1.run(),
+    //             service1.run()
+    //         ]);
+    //     }
+    //     catch(err) {
+    //         thrown = true;
+    //     }
+    //
+    //     expect(thrown).toEqual(true);
+    //
+    //     done();
+    // });
 
     it("does not raise error when parallel transactions update different branches", async function (done) {
         interface Branch1State {
@@ -390,7 +394,7 @@ describe("ServiceStore", function() {
     });
 
     it("Allows for update without transaction when updateAutoBeginTransaction is true", function() {
-        configure({
+        appStore.configure({
             updateAutoBeginTransaction: true,
         });
 
@@ -404,14 +408,13 @@ describe("ServiceStore", function() {
         catch (err) {
             expect(false).toBe(true);
         }
-        finally {
-            configure({
-                updateAutoBeginTransaction: false,
-            });
-        }
     });
 
     it("Does not allow for update without ambient transaction", function() {
+        appStore.configure({
+            updateAutoBeginTransaction: false
+        });
+
         try {
             counterService.store.update({
                 value: counterService.state.value + 1,

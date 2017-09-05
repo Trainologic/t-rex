@@ -2,7 +2,6 @@ import {AppStore} from "./AppStore";
 import {TransactionalObject} from "./TransactionalObject";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
-import {config} from "./config";
 
 if(typeof Zone === "undefined") {
     throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
@@ -19,7 +18,7 @@ export class TransactionScope {
     private oldState: any;
 
     private static nextTranId = 0;
-    private static trans: TransactionScope[] = [];
+    private static _current: TransactionScope = null;
 
     constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
@@ -67,7 +66,7 @@ export class TransactionScope {
             return;
         }
 
-        if(!config.allowConcurrencyErrors && oldState != currentState) {
+        if(!this.appStore.config.allowConcurrencyErrors && oldState != currentState) {
             //
             //  A parallel transaction has already modified the main store before us
             //  We only allow parallel changes at different branches. Else, "Concurrency error is raised"
@@ -91,10 +90,11 @@ export class TransactionScope {
 
         //
         //  Committing to appStore causes emitting of change event
-        //  Subscribers must be notified outside of the transaction zone, else, any
+        //  Subscribers must be notified outside of the transaction, else, any
         //  additional update will be considered as part of the already committed transaction
         //  and therefore will throw error
         //
+        TransactionScope._current = null;
         this.appStore.emit(oldState, newState);
 
         //
@@ -105,37 +105,28 @@ export class TransactionScope {
         logger("committed").log();
     }
 
-    static current(): TransactionScope {
-        const trans = TransactionScope.trans;
-        if(!trans.length) {
-            return null;
-        }
-
-        const tran = trans[trans.length-1];
-        return tran;
+    static get current(): TransactionScope {
+        return TransactionScope._current;
     }
 
     static runInsideTransaction<StateT>(appStore: AppStore<any>, action) {
-        let tran: TransactionScope = TransactionScope.current();
-        if(tran) {
-            tran.ensureNotCommitted();
-
+        if(TransactionScope.current) {
             return action();
         }
 
-        tran = new TransactionScope(appStore);
+        const newTran = new TransactionScope(appStore);
 
-        TransactionScope.trans.push(tran);
+        TransactionScope._current = newTran;
 
         try {
             const retVal = action();
 
-            tran.commit();
+            newTran.commit();
 
             return retVal;
         }
         finally {
-            TransactionScope.trans.pop();
+            TransactionScope._current = null;
         }
     }
 

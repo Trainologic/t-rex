@@ -21,7 +21,12 @@ function internalCollectValues(root, res, seen: Set<object>) {
         }
     }
     else if(root && typeof root == "object") {
-        for(let val of Object["values"](root)) {
+        for(let key in root) {
+            if (key.startsWith("$$t-rex") || key.startsWith("$$system")) {
+                continue;
+            }
+
+            const val = root[key];
             internalCollectValues(val, res, seen);
         }
     }

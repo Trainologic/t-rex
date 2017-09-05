@@ -4,7 +4,6 @@ import {ROOT} from "./TransactionalObject";
 import {IService} from "./Service";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
-import {config} from "./config";
 
 const logger = appLogger.create("AppStore");
 
@@ -32,6 +31,12 @@ export interface StoreMiddlewareNext {
     (activity: ActivityScope): any;
 }
 
+export interface AppStoreConfig {
+    activityAutoBeginTransaction?: boolean;
+    updateAutoBeginTransaction?: boolean;
+    allowConcurrencyErrors?: boolean;
+}
+
 //
 //  Holds application base and allow subscribing to changes
 //  Each ServiceStore register itself to it
@@ -45,6 +50,7 @@ export class AppStore<StateT extends object> {
     private activityListeners: ActivityListener[] = [];
     private middleware: StoreMiddleware;
     private middlewareNext: StoreMiddlewareNext;
+    private _config: AppStoreConfig;
 
     constructor() {
         this.appState = <any>{};
@@ -53,6 +59,20 @@ export class AppStore<StateT extends object> {
         this.services = [];
         this.middleware = null;
         this.middlewareNext = null;
+
+        this._config = {
+            activityAutoBeginTransaction: false,
+            updateAutoBeginTransaction: true,
+            allowConcurrencyErrors: true,
+        };
+    }
+
+    configure(config: AppStoreConfig) {
+        Object.assign(this._config, config);
+    }
+
+    get config() {
+        return this._config;
     }
 
     init(services: IService<any>[]) {
@@ -140,7 +160,7 @@ export class AppStore<StateT extends object> {
             return;
         }
 
-        if(!config.allowConcurrencyErrors && oldState != this.appState) {
+        if(!this._config.allowConcurrencyErrors && oldState != this.appState) {
             logger("A request for new state", newState, "with base", oldState, "is conflicting with existing state", this.appState);
             throw new Error("Concurrency error");
         }

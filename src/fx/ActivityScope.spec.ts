@@ -1,10 +1,3 @@
-import {configure} from "./config";
-
-configure({
-    enableLogging: true,
-    //activityAutoBeginTransaction: false,
-});
-
 import {ActivityListener, AppStore, StoreListener} from "./AppStore";
 import {ServiceStore} from "./ServiceStore";
 import {Activity, transaction} from "./decorators";

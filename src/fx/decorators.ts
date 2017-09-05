@@ -2,7 +2,6 @@ import {TransactionScope} from "./TransactionScope";
 import {ServiceStore} from "./ServiceStore";
 import {AppStore} from "./AppStore";
 import {IService} from "./Service";
-import {config} from "./config";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
 
@@ -113,7 +112,7 @@ export function Activity(options?: ActivityOptions) {
         descriptor.value = function (...args) {
             const service = this;
             let appStore = getAppStoreFromService(service);
-            const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", config.activityAutoBeginTransaction);
+            const beginTransaction: boolean = getOptionOrDefault(options, "beginTransaction", false);
 
             return ActivityScope.runInsideActivity(appStore, service.constructor.name + ":" + propertyKey, ()=> {
                 if(beginTransaction) {
