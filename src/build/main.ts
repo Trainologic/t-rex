@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as cli from "build-utils/cli";
-import {copyFile, copyGlob, deleteDirectory} from "build-utils/fs";
+import {copyFile, copyGlob, deleteDirectory, readJSONFile} from "build-utils/fs";
 import {mergeConfig, updateConfig} from "build-utils/config";
 import {exec} from "build-utils/process";
 
@@ -57,4 +57,10 @@ export async function patch() {
     });
 
     await copyFile("package/package.json", "./package.json");
+
+    const {version} = await readJSONFile("./package.json");
+
+    await exec(`git commit -a -m v${version}`);
+
+    await exec(`git push`);
 }
