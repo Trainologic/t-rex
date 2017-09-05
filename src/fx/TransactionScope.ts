@@ -2,6 +2,7 @@ import {AppStore} from "./AppStore";
 import {TransactionalObject} from "./TransactionalObject";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
+import {config} from "./config";
 
 if(typeof Zone === "undefined") {
     throw new Error("t-rex cannot execute without zone.js. Please ensure zone.js is loaded before t-rex");
@@ -13,12 +14,12 @@ export class TransactionScope {
     private appStore: AppStore<any>;
     private tranState: TransactionalObject<any>;
     private committed: boolean;
-    private outerZone: Zone;
     private id: number;
     private updateCount: number;
     private oldState: any;
 
     private static nextTranId = 0;
+    private static trans: TransactionScope[] = [];
 
     constructor(appStore: AppStore<any>) {
         this.id = ++TransactionScope.nextTranId;
@@ -27,7 +28,6 @@ export class TransactionScope {
         this.oldState = appStore.getState();
         this.tranState = new TransactionalObject(this.oldState);
         this.committed = false;
-        this.outerZone = Zone.current;
 
         logger("created", this.oldState).log();
     }
@@ -67,7 +67,7 @@ export class TransactionScope {
             return;
         }
 
-        if(oldState != currentState) {
+        if(!config.allowConcurrencyErrors && oldState != currentState) {
             //
             //  A parallel transaction has already modified the main store before us
             //  We only allow parallel changes at different branches. Else, "Concurrency error is raised"
@@ -89,15 +89,13 @@ export class TransactionScope {
 
         this.committed = true;
 
-        this.outerZone.run(()=> {
-            //
-            //  Committing to appStore causes emitting of change event
-            //  Subscribers must be notified outside of the transaction zone, else, any
-            //  additional update will be considered as part of the already committed transaction
-            //  and therefore will throw error
-            //
-            this.appStore.emit(oldState, newState);
-        });
+        //
+        //  Committing to appStore causes emitting of change event
+        //  Subscribers must be notified outside of the transaction zone, else, any
+        //  additional update will be considered as part of the already committed transaction
+        //  and therefore will throw error
+        //
+        this.appStore.emit(oldState, newState);
 
         //
         //  Cleans management flags + switch between old and new
@@ -108,61 +106,37 @@ export class TransactionScope {
     }
 
     static current(): TransactionScope {
-        let tran: TransactionScope = Zone.current.get("tran");
+        const trans = TransactionScope.trans;
+        if(!trans.length) {
+            return null;
+        }
+
+        const tran = trans[trans.length-1];
         return tran;
     }
 
     static runInsideTransaction<StateT>(appStore: AppStore<any>, action) {
-        function runAction(func, commit) {
-            var retVal = func();
-            if(retVal && retVal.then) {
-                const promise = retVal;
-                return promise.then(res => {
-                    if(commit) {
-                        tran.commit();
-                    }
-
-                    return res;
-                });
-            }
-            else {
-                if(commit) {
-                    tran.commit();
-                }
-
-                return retVal;
-            }
-        }
-
         let tran: TransactionScope = TransactionScope.current();
         if(tran) {
             tran.ensureNotCommitted();
 
-            //
-            //  This is a nested transaction
-            //  No need to commit changes to app base
-            //
-            return runAction(action, false);
+            return action();
         }
 
-        //
-        //  This is a root transaction
-        //  When completed need to commit to the appStore
-        //
         tran = new TransactionScope(appStore);
 
-        const spec: ZoneSpec = {
-            name: "tran",
-            properties: {
-                "tran": tran,
-            },
-        };
+        TransactionScope.trans.push(tran);
 
-        const zone = Zone.current.fork(spec);
-        return zone.run(function () {
-            var tran1 = TransactionScope.current();
-            return runAction(action, true);
-        });
+        try {
+            const retVal = action();
+
+            tran.commit();
+
+            return retVal;
+        }
+        finally {
+            TransactionScope.trans.pop();
+        }
     }
 
     private ensureNotCommitted() {

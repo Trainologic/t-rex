@@ -2,12 +2,14 @@ export interface Config {
     enableLogging?: boolean;
     activityAutoBeginTransaction?: boolean;
     updateAutoBeginTransaction?: boolean;
+    allowConcurrencyErrors?: boolean;
 }
 
 export const config: Config = {
     enableLogging: false,
     activityAutoBeginTransaction: false,
     updateAutoBeginTransaction: true,
+    allowConcurrencyErrors: true,
 };
 
 export function configure(newConfig: Config) {

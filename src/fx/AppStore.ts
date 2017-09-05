@@ -4,6 +4,7 @@ import {ROOT} from "./TransactionalObject";
 import {IService} from "./Service";
 import {ActivityScope} from "./ActivityScope";
 import {appLogger} from "./logger";
+import {config} from "./config";
 
 const logger = appLogger.create("AppStore");
 
@@ -139,7 +140,8 @@ export class AppStore<StateT extends object> {
             return;
         }
 
-        if(oldState != this.appState) {
+        if(!config.allowConcurrencyErrors && oldState != this.appState) {
+            logger("A request for new state", newState, "with base", oldState, "is conflicting with existing state", this.appState);
             throw new Error("Concurrency error");
         }
 
