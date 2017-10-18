@@ -220,12 +220,27 @@ export class AppStore<StateT extends object> {
         return null;
     }
 
-    registerListener(listener: ActivityListener) {
-        this.activityListeners.push(listener);
+    registerListener(listener: Partial<ActivityListener>) {
+        const fullListener = Object.create(listener);
+
+        const methods = [
+            "onActivityBegin",
+            "onActivitySuccess",
+            "onActivityError",
+            "onActivitySyncComplete",
+            "onActivityAsyncComplete",
+            "onActivityZoneComplete"
+        ];
+
+        for(const method of methods) {
+            fullListener[method] = fullListener[method] || noop;
+        }
+
+        this.activityListeners.push(fullListener as ActivityListener);
     }
 
-    unregisterListener(listener: ActivityListener) {
-        const index = this.activityListeners.indexOf(listener);
+    unregisterListener(listener: Partial<ActivityListener>) {
+        const index = this.activityListeners.indexOf(listener as ActivityListener);
         if(index != -1) {
             this.listeners.splice(index, 1);
         }
@@ -291,4 +306,7 @@ export interface ActivityListener {
     onActivitySyncComplete(activity: ActivityScope);
     onActivityAsyncComplete(activity: ActivityScope);
     onActivityZoneComplete(activity: ActivityScope);
+}
+
+function noop() {
 }

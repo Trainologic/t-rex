@@ -64,11 +64,9 @@ export class ActivityScope {
                 if(isRoot) {
                     activity.onError(err);
                     activity.onSyncComplete();
-                    return;
                 }
-                else {
-                    throw err;
-                }
+
+                throw err;
             }
         }
 
