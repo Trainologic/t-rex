@@ -95,12 +95,16 @@ export class TransactionScope {
         //  and therefore will throw error
         //
         TransactionScope._current = null;
-        this.appStore.emit(oldState, newState);
 
         //
-        //  Cleans management flags + switch between old and new
+        //  Clean management flags + switch between old and new
         //
         this.tranState.commit();
+
+        //
+        //  Emit change event with cleaned state
+        //
+        this.appStore.emit(oldState, newState);
 
         logger("committed").log();
     }

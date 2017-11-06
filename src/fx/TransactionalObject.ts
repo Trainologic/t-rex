@@ -1,8 +1,9 @@
 import {appLogger} from "./logger";
+import {clearModified, getVersion, isModified, setModified, setVersion} from "./ObjectMetadata";
 
 export const ROOT = "/";
-export const $$MODIFIED = "$$t-rex:modified";
-export const $$VERSION = "$$t-rex:version";
+//export const $$MODIFIED = "$$t-rex:modified";
+//export const $$VERSION = "$$t-rex:version";
 
 const logger = appLogger.create("TransactionalObject");
 
@@ -22,7 +23,7 @@ export class TransactionalObject<StateT> {
         logger("commit").log();
 
         for(var obj of this.modified) {
-            delete obj[$$MODIFIED];
+            clearModified(obj);
         }
         this.modified = [];
 
@@ -49,7 +50,7 @@ export class TransactionalObject<StateT> {
             return current;
         }
 
-        if(newBase[$$VERSION] < base[$$VERSION]) {
+        if(getVersion(newBase) < getVersion(base)) {
             return current;
         }
 
@@ -84,7 +85,7 @@ export class TransactionalObject<StateT> {
                 //  There is a local change inside a reference type
                 //  If newBase is older than our data than we are OK
                 //
-                if(base[field] === newBase[field] || base[field][$$VERSION] > newBase[field][$$VERSION]) {
+                if(base[field] === newBase[field] || getVersion(base[field]) > getVersion(newBase[field])) {
                     continue;
                 }
 
@@ -166,7 +167,7 @@ export class TransactionalObject<StateT> {
     }
 
     private clone(obj) {
-        if (obj && obj[$$MODIFIED]) {
+        if (obj && isModified(obj)) {
             //
             //  This object is already a clone
             //  No need to clone again
@@ -176,10 +177,10 @@ export class TransactionalObject<StateT> {
 
         const res = Object.assign({}, obj);
 
-        res[$$MODIFIED] = true;
+        setModified(res);
         this.modified.push(res);
 
-        res[$$VERSION] = (res[$$VERSION] || 0) + 1;
+        setVersion(res, (getVersion(res) || 0)+ 1);
 
         return res;
     }

@@ -51,6 +51,7 @@ export class AppStore<StateT extends object> {
     private middleware: StoreMiddleware;
     private middlewareNext: StoreMiddlewareNext;
     private _config: AppStoreConfig;
+    private duringEmit: boolean;
 
     constructor() {
         this.appState = <any>{};
@@ -155,6 +156,10 @@ export class AppStore<StateT extends object> {
     }
 
     commit(oldState, newState) {
+        if(this.duringEmit) {
+            console.warn("Detected store commit during emit phase. Store subscribers should not update the store during the subscribe method");
+        }
+
         if(newState == this.appState) {
             logger("Nothing new to commit").log();
             return;
@@ -177,6 +182,8 @@ export class AppStore<StateT extends object> {
     }
 
     emit(oldState, newState) {
+        this.duringEmit = true;
+
         for (let l of this.listeners) {
             try {
                 l(this.appState, oldState);
@@ -185,6 +192,8 @@ export class AppStore<StateT extends object> {
                 logger("Ignoring error during AppStore change event", err).error();
             }
         }
+
+        this.duringEmit = false;
     }
 
     private registerStore<StateT>(store: ServiceStore<any>) {
