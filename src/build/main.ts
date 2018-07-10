@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as cli from "build-utils/cli";
-import {copyFile, copyGlob, deleteDirectory, readJSONFile} from "build-utils/fs";
+import {copyFile, copyGlob, deleteDirectory, readJSONFile, writeJSONFile} from "build-utils/fs";
 import {mergeConfig, updateConfig} from "build-utils/config";
 import {exec} from "build-utils/process";
 
@@ -40,7 +40,14 @@ export async function pack() {
     //await copyGlob("./build_tmp/fx/*.js", "./package");
     await copyGlob("./build_tmp/fx/*.d.ts", "./package");
     await copyFile("./package.json", "package/package.json");
-    await updateConfig("package/package.json", {devDependencies: {}}, false);
+
+    const packageJson = await readJSONFile("package/package.json");
+    packageJson.peerDependencies = packageJson.dependencies;
+    packageJson.dependencies = {};
+    packageJson.devDependencies = {};
+    writeJSONFile("package/package.json", packageJson, 4);
+
+    //await updateConfig("package/package.json", {devDependencies: {}}, false);
 }
 
 export async function patch() {
