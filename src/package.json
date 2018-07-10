@@ -1,6 +1,6 @@
 {
     "name": "t-rex",
-    "version": "2.10.2",
+    "version": "2.10.4",
     "main": "t-rex.umd.js",
     "module": "t-rex.es2015.js",
     "scripts": {
@@ -14,11 +14,18 @@
             "type": "MIT"
         }
     ],
-    "dependencies": {},
-    "devDependencies": {},
-    "peerDependencies": {
+    "dependencies": {
         "complog": "^2.0.3",
         "object.values": "^1.0.4",
         "zone.js": "^0.8.12"
+    },
+    "devDependencies": {
+        "@types/jasmine": "^2.5.52",
+        "@types/node": "^8.0.0",
+        "build-utils": "^1.0.52",
+        "jasmine": "^2.6.0",
+        "rollup": "^0.43.0",
+        "tslib": "^1.7.1",
+        "typescript": "2.3.4"
     }
 }

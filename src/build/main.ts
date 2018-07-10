@@ -51,11 +51,9 @@ export async function pack() {
 }
 
 export async function patch() {
-    await pack();
+    await exec("npm version patch");
 
-    await exec("npm version patch", {
-        cwd: "./package",
-    });
+    await pack();
 
     await copyFile("../readme.md", "package/readme.md");
 
@@ -63,11 +61,11 @@ export async function patch() {
         cwd: "./package",
     });
 
-    await copyFile("package/package.json", "./package.json");
+    // await copyFile("package/package.json", "./package.json");
+    //
+    // const {version} = await readJSONFile("./package.json");
 
-    const {version} = await readJSONFile("./package.json");
-
-    await exec(`git commit -a -m v${version}`);
-
-    await exec(`git push`);
+    // await exec(`git commit -a -m v${version}`);
+    //
+    // await exec(`git push`);
 }
